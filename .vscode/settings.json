@@ -21,5 +21,8 @@
         "**/dist/**": true,
         "**/coverage/**": true
     },
-    "deno.lint": false,
+    "deno.enable": false,
+    "deno.enablePaths": [
+        "./nbs"
+    ]
 }
