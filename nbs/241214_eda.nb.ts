@@ -34,33 +34,9 @@ const res = new EccodesWrapper(datapath);
 const data = await res.readToJson();
 
 //#nbts@code
-const msgArrs = data.messages[0].map(({ key, value }) => [key, value]);
+data;
 
 //#nbts@code
-
-//#nbts@code
-const msgObjs = [];
-for (let i = 0; i < data.messages.length; i++) {
-  const msgArrs = data.messages[i].map(({ key, value }) => [key, value]);
-  msgObjs.push(Object.fromEntries(msgArrs));
-}
-
-//#nbts@code
-msgObjs[0];
-
-//#nbts@code
-for (const msg in data.messages) {
-  Object.fromEntries();
-}
-data.messages[0];
-
-//#nbts@code
-const dataArr = data.messages[0].map((item) => [item.key, item.value]);
-
-//#nbts@code
-const jsonData = Object.fromEntries(dataArr);
-
-//#nbts@code
-await Deno.writeTextFile("gribEx.json", JSON.stringify(jsonData, null, 2));
+await Deno.writeTextFile("gribEx.json", JSON.stringify(data, null, 2));
 
 //#nbts@code

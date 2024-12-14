@@ -1,6 +1,6 @@
 import { promisify } from "util";
 import { exec as execCallback, ExecOptions } from "child_process";
-import { Grib2Message } from "./types/types.ts";
+import { Grib2Message } from "@/types/types";
 
 const exec = promisify(execCallback);
 

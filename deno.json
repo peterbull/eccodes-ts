@@ -5,6 +5,7 @@
     "lib": ["deno.window"]
   },
   "imports": {
+    "@/types/types": "./src/types/types.ts",
     "child_process": "node:child_process",
     "util": "node:util"
   }
