@@ -1,0 +1,11 @@
+{
+  "nodeModulesDir": true,
+  "compilerOptions": {
+    "allowJs": true,
+    "lib": ["deno.window"]
+  },
+  "imports": {
+    "child_process": "node:child_process",
+    "util": "node:util"
+  }
+}

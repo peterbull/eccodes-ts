@@ -20,5 +20,6 @@
         "**/node_modules/**": true,
         "**/dist/**": true,
         "**/coverage/**": true
-    }
+    },
+    "deno.lint": false,
 }

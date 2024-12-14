@@ -1,5 +1,6 @@
 import { promisify } from "util";
 import { exec as execCallback, ExecOptions } from "child_process";
+import { Grib2Message } from "./types/types.ts";
 
 const exec = promisify(execCallback);
 
@@ -9,11 +10,12 @@ const DEFAULT_EXEC_OPTIONS: ExecOptions = {
 };
 
 export interface StdOutMsg {
-  messages: GribMessage[];
+  messages: Array<GribMessage[]>;
 }
 
 export interface GribMessage {
-  [key: string]: any;
+  key: string;
+  value: number;
 }
 
 export class EccodesWrapper {
@@ -26,13 +28,19 @@ export class EccodesWrapper {
     }
   }
 
-  async readToJson(): Promise<StdOutMsg> {
+  async readToJson(): Promise<Grib2Message[]> {
     try {
       const { stdout } = await exec(
         `grib_dump -j ${this.gribFilePath}`,
         this.execOptions
       );
-      return JSON.parse(stdout);
+      const data: StdOutMsg = JSON.parse(stdout);
+      const msgObjs = [];
+      for (let i = 0; i < data.messages.length; i++) {
+        const msgArrs = data.messages[i].map(({ key, value }) => [key, value]);
+        msgObjs.push(Object.fromEntries(msgArrs));
+      }
+      return msgObjs;
     } catch (error) {
       if (error instanceof Error) {
         if (error.message.includes("maxBuffer")) {

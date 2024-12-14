@@ -1,7 +1,16 @@
 {
   "name": "eccodes-ts",
-  "version": "1.0.0",
+  "version": "0.0.2",
+  "description": "TypeScript wrapper for eccodes GRIB file handling",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/peterbull/eccodes-ts.git"
+  },
+  "bugs": {
+    "url": "https://github.com/peterbull/eccodes-ts/issues"
+  },
+  "homepage": "https://github.com/peterbull/eccodes-ts#readme",
   "files": [
     "dist"
   ],
@@ -10,14 +19,16 @@
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
       "import": "./dist/eccodes-ts.mjs",
       "require": "./dist/eccodes-ts.cjs",
-      "types": "./dist/index.d.ts"
+      "default": "./dist/eccodes-ts.mjs"
     }
-  }, 
+  },
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build",
+    "build": "npm run build:types && vite build",
+    "build:types": "tsc -p tsconfig.build.json",
     "test": "vitest",
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
@@ -49,6 +60,7 @@
     "eslint-config-prettier": "^9.1.0",
     "typescript": "^5.7.2",
     "vite": "^6.0.3",
+    "vite-plugin-dts": "^4.3.0",
     "vitest": "^2.1.8"
   }
 }

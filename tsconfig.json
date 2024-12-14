@@ -4,15 +4,13 @@
         "useDefineForClassFields": true,
         "module": "ESNext",
         "lib": [
-            "ES2020",
-            "DOM"
+            "ES2020"
         ],
         "skipLibCheck": true,
         "moduleResolution": "bundler",
         "allowImportingTsExtensions": true,
         "resolveJsonModule": true,
         "isolatedModules": true,
-        "noEmit": true,
         "strict": true,
         "noUnusedLocals": true,
         "noUnusedParameters": true,
@@ -26,11 +24,11 @@
             "@/*": [
                 "src/*"
             ]
-        },
+        }
     },
     "include": [
         "src",
-        "tests",
+        "tests"
     ],
     "exclude": [
         "node_modules",
