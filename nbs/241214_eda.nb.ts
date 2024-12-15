@@ -16,7 +16,7 @@ const response = await fetch(
 );
 
 //#nbts@code
-const datapath = `./data/${formattedDate}.gefs.wave.grib2`;
+const datapath = `./data/gefs.wave.grib2`;
 
 //#nbts@code
 const fileStream = await Deno.create(datapath);
@@ -37,6 +37,9 @@ const data = await res.readToJson();
 data;
 
 //#nbts@code
-await Deno.writeTextFile("gribEx.json", JSON.stringify(data, null, 2));
+await Deno.writeTextFile(
+  "./data/gribEx.json",
+  JSON.stringify(data[1], null, 2)
+);
 
 //#nbts@code

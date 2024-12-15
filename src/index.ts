@@ -1,6 +1,15 @@
 import { promisify } from "util";
-import { exec as execCallback, ExecOptions } from "child_process";
-import { Grib2Message } from "@/types/types";
+import { exec as execCallback, spawn, ExecOptions } from "child_process";
+import { createInterface } from "readline";
+import {
+  BaseGrib2Message,
+  WaveParameter,
+  WindParameter,
+  GribParameter,
+  ParameterCategory,
+  WaveParameterNumber,
+  WindParameterNumber,
+} from "@/types/types";
 
 const exec = promisify(execCallback);
 
@@ -9,14 +18,20 @@ const DEFAULT_EXEC_OPTIONS: ExecOptions = {
   timeout: 30000,
 };
 
-export interface StdOutMsg {
-  messages: Array<GribMessage[]>;
-}
-
-export interface GribMessage {
-  key: string;
-  value: number;
-}
+const ESSENTIAL_KEYS = [
+  "parameterCategory",
+  "parameterNumber",
+  "parameterName",
+  "parameterUnits",
+  "shortName",
+  "dataDate",
+  "dataTime",
+  "forecastTime",
+  "maximum",
+  "minimum",
+  "average",
+  "values",
+].join(",");
 
 export class EccodesWrapper {
   constructor(
@@ -28,52 +43,133 @@ export class EccodesWrapper {
     }
   }
 
-  async readToJson(): Promise<Grib2Message[]> {
-    try {
-      const { stdout } = await exec(
-        `grib_dump -j ${this.gribFilePath}`,
-        this.execOptions
-      );
-      const data: StdOutMsg = JSON.parse(stdout);
-      const msgObjs = [];
-      for (let i = 0; i < data.messages.length; i++) {
-        const msgArrs = data.messages[i].map(({ key, value }) => [key, value]);
-        msgObjs.push(Object.fromEntries(msgArrs));
-      }
-      return msgObjs;
-    } catch (error) {
-      if (error instanceof Error) {
-        if (error.message.includes("maxBuffer")) {
-          throw new Error(
-            "GRIB file too large. Consider processing in smaller chunks or increasing buffer size."
-          );
+  /**
+   * Executes grib_dump command to extract data from GRIB files
+   * @param whereClause - Optional filter condition for GRIB messages
+   * @param specificKeys - Keys to extract from GRIB messages
+   * @returns Promise with array of parsed GRIB messages
+   */
+  private async execGribCommandStream<T extends BaseGrib2Message>(
+    whereClause?: string,
+    specificKeys: string = ESSENTIAL_KEYS
+  ): Promise<T[]> {
+    return new Promise((resolve, reject) => {
+      const messages: T[] = [];
+      let currentMessage: { [key: string]: any } = {};
+      let errorOutput = "";
+      let currentJsonString = "";
+
+      const whereParam = whereClause ? `-w ${whereClause}` : "";
+      const args = ["-j"];
+      if (whereParam) args.push(...whereParam.split(" "));
+      args.push("-p", specificKeys, this.gribFilePath);
+
+      const process = spawn("grib_dump", args);
+
+      const rl = createInterface({
+        input: process.stdout,
+        crlfDelay: Infinity,
+      });
+
+      rl.on("line", (line) => {
+        const trimmedLine = line.trim();
+        if (!trimmedLine) return;
+
+        currentJsonString += trimmedLine;
+
+        if (trimmedLine.endsWith("},") || trimmedLine.endsWith("}")) {
+          try {
+            const item = JSON.parse(currentJsonString.replace(/,$/, ""));
+            if (item.key && item.value !== undefined) {
+              currentMessage[item.key] = item.value;
+            }
+            currentJsonString = "";
+          } catch (parseError) {
+            if (Object.keys(currentMessage).length > 0) {
+              messages.push({ ...currentMessage } as T);
+              currentMessage = {};
+            }
+          }
         }
-        if (error.message.includes("ENOENT")) {
-          throw new Error("GRIB file not found");
+      });
+
+      process.stderr.on("data", (data) => {
+        errorOutput += data.toString();
+      });
+
+      process.on("close", (code) => {
+        if (code !== 0) {
+          reject(new Error(`grib_dump failed: ${errorOutput}`));
+          return;
         }
-      }
-      throw new Error(`Failed to read GRIB file: ${error}`);
-    }
+        if (Object.keys(currentMessage).length > 0) {
+          messages.push({ ...currentMessage } as T);
+        }
+
+        resolve(messages);
+      });
+
+      process.on("error", (error) => {
+        reject(new Error(`Failed to spawn grib_dump: ${error.message}`));
+      });
+    });
   }
 
-  async getKeys(keys: string[]): Promise<string> {
-    if (!keys.length) {
-      throw new Error("At least one key must be specified");
-    }
+  async getSignificantWaveHeight(): Promise<WaveParameter[]> {
+    return this.execGribCommandStream<WaveParameter>(
+      "parameterCategory=0,parameterNumber=3"
+    );
+  }
 
-    try {
-      const { stdout } = await exec(
-        `grib_get -p ${keys.join(",")} ${this.gribFilePath}`,
-        this.execOptions
-      );
-      return stdout.trim();
-    } catch (error) {
-      if (error instanceof Error) {
-        if (error.message.includes("ENOENT")) {
-          throw new Error("GRIB file not found");
-        }
-      }
-      throw new Error(`Failed to get keys: ${error}`);
-    }
+  async getPrimaryWavePeriod(): Promise<WaveParameter[]> {
+    return this.execGribCommandStream<WaveParameter>(
+      "parameterCategory=0,parameterNumber=11"
+    );
+  }
+
+  async getPrimaryWaveDirection(): Promise<WaveParameter[]> {
+    return this.execGribCommandStream<WaveParameter>(
+      "parameterCategory=0,parameterNumber=10"
+    );
+  }
+
+  async getWindSpeed(): Promise<WindParameter[]> {
+    return this.execGribCommandStream<WindParameter>(
+      "parameterCategory=2,parameterNumber=1"
+    );
+  }
+
+  async getWindDirection(): Promise<WindParameter[]> {
+    return this.execGribCommandStream<WindParameter>(
+      "parameterCategory=2,parameterNumber=0"
+    );
+  }
+
+  async getWaveParameters(): Promise<WaveParameter[]> {
+    return this.execGribCommandStream<WaveParameter>("parameterCategory=0");
+  }
+
+  async getWindParameters(): Promise<WindParameter[]> {
+    return this.execGribCommandStream<WindParameter>("parameterCategory=2");
+  }
+
+  async getParametersByType<T extends GribParameter>(
+    category: ParameterCategory,
+    paramNumber: WaveParameterNumber | WindParameterNumber,
+    keys?: string[]
+  ): Promise<T[]> {
+    const specificKeys = keys ? keys.join(",") : ESSENTIAL_KEYS;
+    return this.execGribCommandStream<T>(
+      `parameterCategory=${category},parameterNumber=${paramNumber}`,
+      specificKeys
+    );
+  }
+
+  async readToJson(): Promise<BaseGrib2Message[]> {
+    return this.execGribCommandStream(undefined, ESSENTIAL_KEYS);
   }
 }
+
+export type { BaseGrib2Message, WaveParameter, WindParameter, GribParameter };
+
+export { ParameterCategory, WaveParameterNumber, WindParameterNumber };

@@ -7,6 +7,7 @@
   "imports": {
     "@/types/types": "./src/types/types.ts",
     "child_process": "node:child_process",
-    "util": "node:util"
+    "util": "node:util",
+    "readline": "node:readline"
   }
 }
