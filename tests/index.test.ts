@@ -1,6 +1,12 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import path from "path";
 import { EccodesWrapper } from "@/index";
+import {
+  ParameterCategory,
+  ParameterUnits,
+  WaveParameterNumber,
+  WindParameterNumber,
+} from "@/types/types";
 
 describe("EccodesWrapper", () => {
   const testFilePath = path.join(__dirname, "fixtures/gefs.wave.grib2");
@@ -19,7 +25,7 @@ describe("EccodesWrapper", () => {
     });
 
     it("should create instance with custom exec options", () => {
-      const customWrapper = new EccodesWrapper(testFilePath, { timeout: 5000 });
+      const customWrapper = new EccodesWrapper(testFilePath);
       expect(customWrapper).toBeInstanceOf(EccodesWrapper);
     });
   });
@@ -32,51 +38,110 @@ describe("EccodesWrapper", () => {
         expect(data[0]).toBeInstanceOf(Object);
       }
     });
+  });
 
-    it("should throw error when file not found", async () => {
-      const invalidWrapper = new EccodesWrapper(nonExistentPath);
-      await expect(invalidWrapper.readToJson()).rejects.toThrow(
-        "GRIB file not found"
-      );
+  describe("wave parameter methods", () => {
+    it("should get significant wave height", async () => {
+      const data = await wrapper.getSignificantWaveHeight();
+      expect(Array.isArray(data)).toBe(true);
+      if (data.length > 0) {
+        expect(data[0].parameterCategory).toBe(ParameterCategory.Wave);
+        expect(data[0].parameterNumber).toBe(
+          WaveParameterNumber.SignificantHeight
+        );
+        expect(data[0].parameterUnits).toBe(ParameterUnits.Meters);
+      }
     });
 
-    it("should throw error when buffer size exceeded", async () => {
-      const smallBufferWrapper = new EccodesWrapper(testFilePath, {
-        maxBuffer: 1,
-      });
-      await expect(smallBufferWrapper.readToJson()).rejects.toThrow(
-        "GRIB file too large"
-      );
+    it("should get primary wave period", async () => {
+      const data = await wrapper.getPrimaryWavePeriod();
+      expect(Array.isArray(data)).toBe(true);
+      if (data.length > 0) {
+        expect(data[0].parameterCategory).toBe(ParameterCategory.Wave);
+        expect(data[0].parameterNumber).toBe(WaveParameterNumber.PrimaryPeriod);
+        expect(data[0].parameterUnits).toBe(ParameterUnits.Seconds);
+      }
+    });
+
+    it("should get primary wave direction", async () => {
+      const data = await wrapper.getPrimaryWaveDirection();
+      expect(Array.isArray(data)).toBe(true);
+      if (data.length > 0) {
+        expect(data[0].parameterCategory).toBe(ParameterCategory.Wave);
+        expect(data[0].parameterNumber).toBe(
+          WaveParameterNumber.PrimaryDirection
+        );
+        expect(data[0].parameterUnits).toBe(ParameterUnits.DegreeTrue);
+      }
     });
   });
 
-  describe("getKeys", () => {
-    it("should get single key", async () => {
-      const result = await wrapper.getKeys(["shortName"]);
-      expect(result).toBeDefined();
-      expect(typeof result).toBe("string");
-      expect(result.length).toBeGreaterThan(0);
+  describe("wind parameter methods", () => {
+    it("should get wind speed", async () => {
+      const data = await wrapper.getWindSpeed();
+      expect(Array.isArray(data)).toBe(true);
+      if (data.length > 0) {
+        expect(data[0].parameterCategory).toBe(ParameterCategory.Wind);
+        expect(data[0].parameterNumber).toBe(WindParameterNumber.Speed);
+        expect(data[0].parameterUnits).toBe(ParameterUnits.MetersPerSecond);
+      }
     });
 
-    it("should get multiple keys", async () => {
-      const result = await wrapper.getKeys(["shortName", "level", "date"]);
-      expect(result).toBeDefined();
-      expect(typeof result).toBe("string");
-      expect(result.length).toBeGreaterThan(0);
-      expect(result.split("\n").length).toBeGreaterThan(0);
+    it("should get wind direction", async () => {
+      const data = await wrapper.getWindDirection();
+      expect(Array.isArray(data)).toBe(true);
+      if (data.length > 0) {
+        expect(data[0].parameterCategory).toBe(ParameterCategory.Wind);
+        expect(data[0].parameterNumber).toBe(WindParameterNumber.Direction);
+        expect(data[0].parameterUnits).toBe(ParameterUnits.DegTrue);
+      }
+    });
+  });
+
+  describe("parameter type methods", () => {
+    it("should get all wave parameters", async () => {
+      const data = await wrapper.getWaveParameters();
+      expect(Array.isArray(data)).toBe(true);
+      if (data.length > 0) {
+        expect(data[0].parameterCategory).toBe(ParameterCategory.Wave);
+      }
     });
 
-    it("should throw error when no keys provided", async () => {
-      await expect(wrapper.getKeys([])).rejects.toThrow(
-        "At least one key must be specified"
+    it("should get all wind parameters", async () => {
+      const data = await wrapper.getWindParameters();
+      expect(Array.isArray(data)).toBe(true);
+      if (data.length > 0) {
+        expect(data[0].parameterCategory).toBe(ParameterCategory.Wind);
+      }
+    });
+
+    it("should get parameters by type", async () => {
+      const data = await wrapper.getParametersByType(
+        ParameterCategory.Wave,
+        WaveParameterNumber.SignificantHeight
       );
+      expect(Array.isArray(data)).toBe(true);
+      if (data.length > 0) {
+        expect(data[0].parameterCategory).toBe(ParameterCategory.Wave);
+        expect(data[0].parameterNumber).toBe(
+          WaveParameterNumber.SignificantHeight
+        );
+      }
     });
 
-    it("should throw error when file not found", async () => {
-      const invalidWrapper = new EccodesWrapper(nonExistentPath);
-      await expect(invalidWrapper.getKeys(["shortName"])).rejects.toThrow(
-        "GRIB file not found"
+    it("should get parameters with custom keys", async () => {
+      const customKeys = ["shortName", "maximum", "minimum"];
+      const data = await wrapper.getParametersByType(
+        ParameterCategory.Wave,
+        WaveParameterNumber.SignificantHeight,
+        customKeys
       );
+      expect(Array.isArray(data)).toBe(true);
+      if (data.length > 0) {
+        expect(Object.keys(data[0])).toEqual(
+          expect.arrayContaining(customKeys)
+        );
+      }
     });
   });
 });

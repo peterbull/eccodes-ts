@@ -34,10 +34,7 @@ const ESSENTIAL_KEYS = [
 ].join(",");
 
 export class EccodesWrapper {
-  constructor(
-    private gribFilePath: string,
-    private execOptions: ExecOptions = DEFAULT_EXEC_OPTIONS
-  ) {
+  constructor(private gribFilePath: string) {
     if (!gribFilePath) {
       throw new Error("GRIB file path is required");
     }
