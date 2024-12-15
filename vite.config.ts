@@ -11,14 +11,10 @@ export default defineConfig({
       formats: ["es", "cjs"],
     },
     rollupOptions: {
-      external: ["child_process", "util"],
+      external: ["child_process", "util", "readline"],
     },
   },
-  plugins: [
-    dts({
-      insertTypesEntry: true,
-    }),
-  ],
+  plugins: [dts()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),

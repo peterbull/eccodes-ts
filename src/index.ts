@@ -1,6 +1,5 @@
-import { promisify } from "util";
-import { exec as execCallback, spawn, ExecOptions } from "child_process";
-import { createInterface } from "readline";
+import { spawn } from "child_process";
+import * as readline from "readline";
 import {
   BaseGrib2Message,
   WaveParameter,
@@ -10,13 +9,6 @@ import {
   WaveParameterNumber,
   WindParameterNumber,
 } from "@/types/types";
-
-const exec = promisify(execCallback);
-
-const DEFAULT_EXEC_OPTIONS: ExecOptions = {
-  maxBuffer: 1024 * 1024 * 100,
-  timeout: 30000,
-};
 
 const ESSENTIAL_KEYS = [
   "parameterCategory",
@@ -63,7 +55,7 @@ export class EccodesWrapper {
 
       const process = spawn("grib_dump", args);
 
-      const rl = createInterface({
+      const rl = readline.createInterface({
         input: process.stdout,
         crlfDelay: Infinity,
       });

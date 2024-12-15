@@ -10,7 +10,6 @@ import {
 
 describe("EccodesWrapper", () => {
   const testFilePath = path.join(__dirname, "fixtures/gefs.wave.grib2");
-  const nonExistentPath = "non/existent/path.grib2";
   let wrapper: EccodesWrapper;
 
   beforeEach(() => {
