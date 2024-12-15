@@ -25,6 +25,25 @@ const ESSENTIAL_KEYS = [
   "values",
 ].join(",");
 
+const METADATA_KEYS = [
+  "gridType",
+  "Ni",
+  "Nj",
+  "latitudeOfFirstGridPointInDegrees",
+  "longitudeOfFirstGridPointInDegrees",
+  "latitudeOfLastGridPointInDegrees",
+  "longitudeOfLastGridPointInDegrees",
+  "iDirectionIncrementInDegrees",
+  "jDirectionIncrementInDegrees",
+  "centre",
+  "editionNumber",
+  "typeOfGeneratingProcess",
+  "generatingProcessIdentifier",
+  "numberOfValues",
+  "numberOfMissing",
+  "getNumberOfValues",
+].join(",");
+
 export class EccodesWrapper {
   constructor(private gribFilePath: string) {
     if (!gribFilePath) {
@@ -44,7 +63,7 @@ export class EccodesWrapper {
   ): Promise<T[]> {
     return new Promise((resolve, reject) => {
       const messages: T[] = [];
-      let currentMessage: { [key: string]: any } = {};
+      let currentMessage: Partial<T> = {};
       let errorOutput = "";
       let currentJsonString = "";
 
@@ -73,7 +92,7 @@ export class EccodesWrapper {
               currentMessage[item.key] = item.value;
             }
             currentJsonString = "";
-          } catch (parseError) {
+          } catch {
             if (Object.keys(currentMessage).length > 0) {
               messages.push({ ...currentMessage } as T);
               currentMessage = {};
@@ -152,6 +171,10 @@ export class EccodesWrapper {
       `parameterCategory=${category},parameterNumber=${paramNumber}`,
       specificKeys
     );
+  }
+
+  async getMetadata(): Promise<BaseGrib2Message[]> {
+    return this.execGribCommandStream(undefined, METADATA_KEYS);
   }
 
   async readToJson(): Promise<BaseGrib2Message[]> {

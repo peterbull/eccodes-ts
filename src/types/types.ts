@@ -157,3 +157,48 @@ export interface ParameterMetadata {
   shortName: string[];
   cfVarName: string[];
 }
+
+export interface GribMetadata {
+  // Grid information
+  gridType: string;
+  Ni: number;
+  Nj: number;
+  latitudeOfFirstGridPointInDegrees: number;
+  longitudeOfFirstGridPointInDegrees: number;
+  latitudeOfLastGridPointInDegrees: number;
+  longitudeOfLastGridPointInDegrees: number;
+  iDirectionIncrementInDegrees: number;
+  jDirectionIncrementInDegrees: number;
+
+  // Processing information
+  centre: number;
+  editionNumber: number;
+  typeOfGeneratingProcess: number;
+  generatingProcessIdentifier: number;
+
+  // Time and forecast details
+  dataDate: number;
+  dataTime: number;
+  stepUnits: string;
+  forecastTime: number;
+  stepRange: string;
+
+  // Statistical properties
+  numberOfValues: number;
+  numberOfMissing: number;
+  getNumberOfValues: number;
+}
+
+export interface ForecastMessage {
+  metadata: GribMetadata;
+  parameterCategory: number;
+  parameterNumber: number;
+  parameterName: string;
+  parameterUnits: string;
+  shortName: string;
+  values: (number | null)[];
+  maximum: number;
+  minimum: number;
+  average: number;
+  standardDeviation: number;
+}

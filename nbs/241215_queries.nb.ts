@@ -30,3 +30,6 @@ async function benchmarkMethod(method: () => Promise<unknown>) {
 await benchmarkMethod(() => res.getPrimaryWavePeriod());
 
 //#nbts@code
+await res.getSignificantWaveHeight();
+
+//#nbts@code

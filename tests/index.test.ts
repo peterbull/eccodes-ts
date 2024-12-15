@@ -39,6 +39,16 @@ describe("EccodesWrapper", () => {
     });
   });
 
+  describe("getMetadata", () => {
+    it("should read GRIB file Metadata to JSON with correct structure", async () => {
+      const data = await wrapper.getMetadata();
+      expect(Array.isArray(data)).toBe(true);
+      if (data.length > 0) {
+        expect(data[0]).toBeInstanceOf(Object);
+      }
+    });
+  });
+
   describe("wave parameter methods", () => {
     it("should get significant wave height", async () => {
       const data = await wrapper.getSignificantWaveHeight();
