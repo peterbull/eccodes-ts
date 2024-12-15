@@ -1,0 +1,90 @@
+name: Publish and Release
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    types: [closed]
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install eccodes
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libeccodes-dev libeccodes-tools
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm lint:check
+      - run: pnpm format:check
+      - run: pnpm test
+
+  publish:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v2
+        with:
+          version: 8
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          registry-url: "https://registry.npmjs.org"
+          cache: "pnpm"
+
+      - name: Install eccodes
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libeccodes-dev libeccodes-tools
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+
+      - name: Version and Publish
+        id: version
+        run: |
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'github-actions@users.noreply.github.com'
+          VERSION=$(pnpm version patch)
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          pnpm publish --no-git-checks
+          git push --follow-tags
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  release:
+    needs: publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.PAT_TOKEN }}
+
+      - name: Create Release
+        env:
+          GH_TOKEN: ${{ secrets.PAT_TOKEN }}
+          VERSION: ${{ needs.publish.outputs.version }}
+        run: |
+          gh release create "${VERSION}" \
+            --repo="${GITHUB_REPOSITORY}" \
+            --title="Release ${VERSION}" \
+            --generate-notes
