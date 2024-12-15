@@ -87,7 +87,9 @@ export class EccodesWrapper {
 
         if (trimmedLine.endsWith("},") || trimmedLine.endsWith("}")) {
           try {
-            const item = JSON.parse(currentJsonString.replace(/,$/, ""));
+            const item: { key: keyof T; value: T[keyof T] } = JSON.parse(
+              currentJsonString.replace(/,$/, "")
+            );
             if (item.key && item.value !== undefined) {
               currentMessage[item.key] = item.value;
             }
