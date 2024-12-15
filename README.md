@@ -87,6 +87,7 @@ const customParams = await grib.getParametersByType(
 const allParams = await grib.readToJson();
 ```
 
+
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
