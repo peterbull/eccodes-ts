@@ -55,14 +55,31 @@ jobs:
       - name: Version and Publish
         id: version
         run: |
-          git config --global user.name 'GitHub Actions'
-          git config --global user.email 'github-actions@users.noreply.github.com'
-          VERSION=$(pnpm version patch)
-          echo "version=${VERSION}" >> $GITHUB_OUTPUT
-          pnpm publish --no-git-checks
-          git push --follow-tags
+          # Get current version from package.json
+          CURRENT_VERSION=$(node -p "require('./package.json').version")
+
+          # Check if this version exists on npm
+          if ! npm view eccodes-ts@${CURRENT_VERSION} version &> /dev/null; then
+            git config --global user.name 'GitHub Actions'
+            git config --global user.email 'github-actions@users.noreply.github.com'
+            
+            # Increment patch version
+            VERSION=$(pnpm version patch)
+            echo "version=${VERSION}" >> $GITHUB_OUTPUT
+            
+            # Publish to npm
+            pnpm publish --no-git-checks
+            
+            # Push changes
+            git push --follow-tags
+          else
+            echo "Version ${CURRENT_VERSION} already exists on npm, skipping publish"
+            echo "version=${CURRENT_VERSION}" >> $GITHUB_OUTPUT
+            exit 0
+          fi
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.PAT_TOKEN }}
 
   release:
     needs: publish
