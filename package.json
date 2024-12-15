@@ -36,8 +36,8 @@
     "prepare": "npm run build",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx,json,md}\"",
     "format:check": "prettier --check \"src/**/*.{js,jsx,ts,tsx,json,md}\"",
-    "lint": "eslint . --ext .ts,.tsx --fix",
-    "lint:check": "eslint . --ext .ts,.tsx"
+    "lint": "eslint \"src/**/*.{ts,tsx}\" --fix",
+    "lint:check": "eslint \"src/**/*.{ts,tsx}\""
   },
   "keywords": [
     "eccodes",
@@ -49,7 +49,9 @@
   "license": "MIT",
   "dependencies": {
     "bindings": "^1.5.0",
-    "node-addon-api": "^8.3.0"
+    "eslint-js": "github:eslint/js",
+    "node-addon-api": "^8.3.0",
+    "typescript-eslint": "^8.18.0"
   },
   "devDependencies": {
     "@trivago/prettier-plugin-sort-imports": "^5.2.0",
