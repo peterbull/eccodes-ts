@@ -125,6 +125,47 @@ export class EccodesWrapper {
     });
   }
 
+  private async execFullGribDump<T extends BaseGrib2Message>(): Promise<T[]> {
+    return new Promise((resolve, reject) => {
+      let fullOutput = "";
+      let errorOutput = "";
+
+      const process = spawn("grib_dump", ["-j", this.gribFilePath]);
+
+      process.stdout.on("data", (data) => {
+        fullOutput += data.toString();
+      });
+
+      process.stderr.on("data", (data) => {
+        errorOutput += data.toString();
+      });
+
+      process.on("close", (code) => {
+        if (code !== 0) {
+          reject(new Error(`grib_dump failed: ${errorOutput}`));
+          return;
+        }
+
+        try {
+          const data = JSON.parse(fullOutput);
+          const messages = data.messages.map(
+            (msgArr: Array<{ key: string; value: unknown }>) => {
+              const msgEntries = msgArr.map(({ key, value }) => [key, value]);
+              return Object.fromEntries(msgEntries);
+            }
+          );
+          resolve(messages as T[]);
+        } catch (error) {
+          reject(new Error(`Failed to parse GRIB data: ${error}`));
+        }
+      });
+
+      process.on("error", (error) => {
+        reject(new Error(`Failed to spawn grib_dump: ${error.message}`));
+      });
+    });
+  }
+
   async getSignificantWaveHeight(): Promise<WaveParameter[]> {
     return this.execGribCommandStream<WaveParameter>(
       "parameterCategory=0,parameterNumber=3"
@@ -180,7 +221,7 @@ export class EccodesWrapper {
   }
 
   async readToJson(): Promise<BaseGrib2Message[]> {
-    return this.execGribCommandStream(undefined, ESSENTIAL_KEYS);
+    return this.execFullGribDump();
   }
 }
 

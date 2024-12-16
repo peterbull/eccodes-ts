@@ -11,6 +11,12 @@ const datapath = `./data/gefs.wave.grib2`;
 const res = new EccodesWrapper(datapath);
 
 //#nbts@code
+await res.getPrimaryWaveDirection();
+
+//#nbts@code
+await res.readToJson();
+
+//#nbts@code
 const test = await res.getSignificantWaveHeight();
 
 //#nbts@code

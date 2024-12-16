@@ -29,16 +29,6 @@ describe("EccodesWrapper", () => {
     });
   });
 
-  describe("readToJson", () => {
-    it("should read GRIB file to JSON with correct structure", async () => {
-      const data = await wrapper.readToJson();
-      expect(Array.isArray(data)).toBe(true);
-      if (data.length > 0) {
-        expect(data[0]).toBeInstanceOf(Object);
-      }
-    });
-  });
-
   describe("getMetadata", () => {
     it("should read GRIB file Metadata to JSON with correct structure", async () => {
       const data = await wrapper.getMetadata();
@@ -150,6 +140,55 @@ describe("EccodesWrapper", () => {
         expect(Object.keys(data[0])).toEqual(
           expect.arrayContaining(customKeys)
         );
+      }
+    });
+  });
+
+  describe("metadata methods", () => {
+    it("should return all required metadata keys", async () => {
+      const data = await wrapper.getMetadata();
+      const requiredKeys = [
+        "gridType",
+        "Ni",
+        "Nj",
+        "latitudeOfFirstGridPointInDegrees",
+        "longitudeOfFirstGridPointInDegrees",
+      ];
+
+      expect(Array.isArray(data)).toBe(true);
+      if (data.length > 0) {
+        requiredKeys.forEach((key) => {
+          expect(data[0]).toHaveProperty(key);
+        });
+      }
+    });
+  });
+
+  describe("full GRIB dump", () => {
+    it("should return complete message structure", async () => {
+      const data = await wrapper.readToJson();
+      const requiredKeys = [
+        "parameterCategory",
+        "parameterNumber",
+        "parameterName",
+        "values",
+        "maximum",
+        "minimum",
+      ];
+
+      expect(Array.isArray(data)).toBe(true);
+      if (data.length > 0) {
+        requiredKeys.forEach((key) => {
+          expect(data[0]).toHaveProperty(key);
+        });
+      }
+    });
+
+    it("should handle empty values array", async () => {
+      const data = await wrapper.readToJson();
+      expect(Array.isArray(data)).toBe(true);
+      if (data.length > 0) {
+        expect(Array.isArray(data[0].values)).toBe(true);
       }
     });
   });
