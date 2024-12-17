@@ -8,6 +8,7 @@ import {
   ParameterCategory,
   WaveParameterNumber,
   WindParameterNumber,
+  ParameterNumber,
 } from "@/types/types";
 
 const ESSENTIAL_KEYS = [
@@ -43,6 +44,11 @@ const METADATA_KEYS = [
   "numberOfMissing",
   "getNumberOfValues",
 ].join(",");
+
+type CommandStreamParams = {
+  category: ParameterCategory;
+  number?: ParameterNumber;
+};
 
 export class EccodesWrapper {
   constructor(private gribFilePath: string) {
@@ -166,42 +172,76 @@ export class EccodesWrapper {
     });
   }
 
+  getCommandStreamParams({ category, number }: CommandStreamParams) {
+    const params = [];
+    if (category) {
+      params.push(`parameterCategory=${category}`);
+    }
+    if (number) {
+      params.push(`parameterNumber=${number}`);
+    }
+    return params.join(",");
+  }
+
   async getSignificantWaveHeight(): Promise<WaveParameter[]> {
     return this.execGribCommandStream<WaveParameter>(
-      "parameterCategory=0,parameterNumber=3"
+      this.getCommandStreamParams({
+        category: ParameterCategory.Wave,
+        number: WaveParameterNumber.SignificantHeight,
+      })
     );
   }
 
   async getPrimaryWavePeriod(): Promise<WaveParameter[]> {
     return this.execGribCommandStream<WaveParameter>(
-      "parameterCategory=0,parameterNumber=11"
+      this.getCommandStreamParams({
+        category: ParameterCategory.Wave,
+        number: WaveParameterNumber.PrimaryPeriod,
+      })
     );
   }
 
   async getPrimaryWaveDirection(): Promise<WaveParameter[]> {
     return this.execGribCommandStream<WaveParameter>(
-      "parameterCategory=0,parameterNumber=10"
+      this.getCommandStreamParams({
+        category: ParameterCategory.Wave,
+        number: WaveParameterNumber.PrimaryDirection,
+      })
     );
   }
 
   async getWindSpeed(): Promise<WindParameter[]> {
     return this.execGribCommandStream<WindParameter>(
-      "parameterCategory=2,parameterNumber=1"
+      this.getCommandStreamParams({
+        category: ParameterCategory.Wind,
+        number: WindParameterNumber.Speed,
+      })
     );
   }
 
   async getWindDirection(): Promise<WindParameter[]> {
     return this.execGribCommandStream<WindParameter>(
-      "parameterCategory=2,parameterNumber=0"
+      this.getCommandStreamParams({
+        category: ParameterCategory.Wind,
+        number: WindParameterNumber.Direction,
+      })
     );
   }
 
   async getWaveParameters(): Promise<WaveParameter[]> {
-    return this.execGribCommandStream<WaveParameter>("parameterCategory=0");
+    return this.execGribCommandStream<WaveParameter>(
+      this.getCommandStreamParams({
+        category: ParameterCategory.Wave,
+      })
+    );
   }
 
   async getWindParameters(): Promise<WindParameter[]> {
-    return this.execGribCommandStream<WindParameter>("parameterCategory=2");
+    return this.execGribCommandStream<WindParameter>(
+      this.getCommandStreamParams({
+        category: ParameterCategory.Wind,
+      })
+    );
   }
 
   async getParametersByType<T extends GribParameter>(

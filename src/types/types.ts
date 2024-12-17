@@ -21,6 +21,8 @@ export enum WindParameterNumber {
   Direction = 0,
 }
 
+export type ParameterNumber = WaveParameterNumber | WindParameterNumber;
+
 // Units
 export enum ParameterUnits {
   Meters = "m",
