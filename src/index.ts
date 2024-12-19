@@ -5,11 +5,12 @@ import {
   WaveParameter,
   WindParameter,
   GribParameter,
-  ParameterCategory,
-  WaveParameterNumber,
-  WindParameterNumber,
   ParameterNumber,
 } from "@/types/types";
+import { OceanographicParameterCategory } from "@/types/discipline/oceanographicProducts/categories";
+import { WaveParameterNumber } from "@/types/discipline/oceanographicProducts/waves";
+import { MomentumParameterNumber } from "@/types/discipline/meteorologicalProducts/momentum";
+import { MeteorologicalParameterCategory } from "@/types/discipline/meteorologicalProducts/categories";
 
 const ESSENTIAL_KEYS = [
   "parameterCategory",
@@ -46,7 +47,7 @@ const METADATA_KEYS = [
 ].join(",");
 
 type CommandStreamParams = {
-  category: ParameterCategory;
+  category: OceanographicParameterCategory | MeteorologicalParameterCategory;
   number?: ParameterNumber;
 };
 
@@ -186,8 +187,8 @@ export class EccodesWrapper {
   async getSignificantWaveHeight(): Promise<WaveParameter[]> {
     return this.execGribCommandStream<WaveParameter>(
       this.getCommandStreamParams({
-        category: ParameterCategory.Wave,
-        number: WaveParameterNumber.SignificantHeight,
+        category: OceanographicParameterCategory.Waves,
+        number: WaveParameterNumber.SignificantHeightCombined,
       })
     );
   }
@@ -195,8 +196,8 @@ export class EccodesWrapper {
   async getPrimaryWavePeriod(): Promise<WaveParameter[]> {
     return this.execGribCommandStream<WaveParameter>(
       this.getCommandStreamParams({
-        category: ParameterCategory.Wave,
-        number: WaveParameterNumber.PrimaryPeriod,
+        category: OceanographicParameterCategory.Waves,
+        number: WaveParameterNumber.PrimaryWavePeriod,
       })
     );
   }
@@ -204,8 +205,8 @@ export class EccodesWrapper {
   async getPrimaryWaveDirection(): Promise<WaveParameter[]> {
     return this.execGribCommandStream<WaveParameter>(
       this.getCommandStreamParams({
-        category: ParameterCategory.Wave,
-        number: WaveParameterNumber.PrimaryDirection,
+        category: OceanographicParameterCategory.Waves,
+        number: WaveParameterNumber.PrimaryWaveDirection,
       })
     );
   }
@@ -213,8 +214,8 @@ export class EccodesWrapper {
   async getWindSpeed(): Promise<WindParameter[]> {
     return this.execGribCommandStream<WindParameter>(
       this.getCommandStreamParams({
-        category: ParameterCategory.Wind,
-        number: WindParameterNumber.Speed,
+        category: MeteorologicalParameterCategory.Momentum,
+        number: MomentumParameterNumber.WindSpeed,
       })
     );
   }
@@ -222,8 +223,8 @@ export class EccodesWrapper {
   async getWindDirection(): Promise<WindParameter[]> {
     return this.execGribCommandStream<WindParameter>(
       this.getCommandStreamParams({
-        category: ParameterCategory.Wind,
-        number: WindParameterNumber.Direction,
+        category: MeteorologicalParameterCategory.Momentum,
+        number: MomentumParameterNumber.WindDirection,
       })
     );
   }
@@ -231,7 +232,7 @@ export class EccodesWrapper {
   async getWaveParameters(): Promise<WaveParameter[]> {
     return this.execGribCommandStream<WaveParameter>(
       this.getCommandStreamParams({
-        category: ParameterCategory.Wave,
+        category: OceanographicParameterCategory.Waves,
       })
     );
   }
@@ -239,14 +240,14 @@ export class EccodesWrapper {
   async getWindParameters(): Promise<WindParameter[]> {
     return this.execGribCommandStream<WindParameter>(
       this.getCommandStreamParams({
-        category: ParameterCategory.Wind,
+        category: MeteorologicalParameterCategory.Momentum,
       })
     );
   }
 
   async getParametersByType<T extends GribParameter>(
-    category: ParameterCategory,
-    paramNumber: WaveParameterNumber | WindParameterNumber,
+    category: OceanographicParameterCategory,
+    paramNumber: WaveParameterNumber | MomentumParameterNumber,
     keys?: string[]
   ): Promise<T[]> {
     const specificKeys = keys ? keys.join(",") : ESSENTIAL_KEYS;
@@ -267,4 +268,8 @@ export class EccodesWrapper {
 
 export type { BaseGrib2Message, WaveParameter, WindParameter, GribParameter };
 
-export { ParameterCategory, WaveParameterNumber, WindParameterNumber };
+export {
+  OceanographicParameterCategory as ParameterCategory,
+  WaveParameterNumber,
+  MomentumParameterNumber,
+};
