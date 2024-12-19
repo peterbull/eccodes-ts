@@ -14,6 +14,7 @@ data[0];
 
 //#nbts@code
 const changingKeys = [
+  "discipline",
   "parameterCategory",
   "parameterNumber",
   "parameterUnits",

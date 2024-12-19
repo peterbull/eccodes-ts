@@ -2,9 +2,27 @@
 //#nbts@code
 import { EccodesWrapper } from "../src/index.ts";
 import pl from "npm:nodejs-polars";
+import {
+  ParameterUnits,
+  BaseGrib2Message,
+  WaveParameter,
+  WindParameter,
+  GribParameter,
+  ParameterCategory,
+  WaveParameterNumber,
+  WindParameterNumber,
+  GribMetadata,
+  ParameterMetadata,
+} from "../src/types/types.ts";
 
 //#nbts@code
-pl.Config.setAsciiTables();
+function dfShow() {
+  console.log(df.toString());
+}
+
+//#nbts@code
+pl.Config.setTblWidthChars(3000);
+pl.Config.setTblCols(14);
 
 //#nbts@code
 const datapath = `./data/gefs.wave.grib2`;
@@ -14,33 +32,20 @@ const res = new EccodesWrapper(datapath);
 await res.getPrimaryWaveDirection();
 
 //#nbts@code
-await res.readToJson();
-
-//#nbts@code
-const test = await res.getSignificantWaveHeight();
-
-//#nbts@code
-Object.keys(test[0]);
-
-//#nbts@code
-const fullRes = await res.readToJson();
-
-//#nbts@code
-Object.keys(fullRes[0]);
-
-//#nbts@code
-await res.getMetadata();
-
-//#nbts@code
-const data = await res.getSignificantWaveHeight();
+const data = await res.readToJson();
 
 //#nbts@code
 const df = pl.DataFrame(data);
 
 //#nbts@code
-console.log(df.toString());
+dfShow();
 
 //#nbts@code
-df.columns;
+const categoryKeys = Object.keys(ParameterCategory).filter((key) =>
+  isNaN(Number(key))
+);
+
+//#nbts@code
+await res.getSignificantWaveHeight();
 
 //#nbts@code
