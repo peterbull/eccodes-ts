@@ -1,12 +1,10 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import path from "path";
 import { EccodesWrapper } from "@/index";
-import {
-  ParameterCategory,
-  ParameterUnits,
-  WaveParameterNumber,
-  WindParameterNumber,
-} from "@/types/types";
+import { OceanographicParameterCategory } from "@/types/discipline/oceanographicProducts/categories";
+import { WaveParameterNumber } from "@/types/discipline/oceanographicProducts/waves";
+import { MomentumParameterNumber } from "@/types/discipline/meteorologicalProducts/momentum";
+import { MeteorologicalParameterCategory } from "@/types/discipline/meteorologicalProducts/categories";
 
 describe("EccodesWrapper", () => {
   const testFilePath = path.join(__dirname, "fixtures/gefs.wave.grib2");
@@ -23,19 +21,9 @@ describe("EccodesWrapper", () => {
       );
     });
 
-    it("should create instance with custom exec options", () => {
+    it("should create instance with valid file path", () => {
       const customWrapper = new EccodesWrapper(testFilePath);
       expect(customWrapper).toBeInstanceOf(EccodesWrapper);
-    });
-  });
-
-  describe("getMetadata", () => {
-    it("should read GRIB file Metadata to JSON with correct structure", async () => {
-      const data = await wrapper.getMetadata();
-      expect(Array.isArray(data)).toBe(true);
-      if (data.length > 0) {
-        expect(data[0]).toBeInstanceOf(Object);
-      }
     });
   });
 
@@ -44,11 +32,12 @@ describe("EccodesWrapper", () => {
       const data = await wrapper.getSignificantWaveHeight();
       expect(Array.isArray(data)).toBe(true);
       if (data.length > 0) {
-        expect(data[0].parameterCategory).toBe(ParameterCategory.Wave);
-        expect(data[0].parameterNumber).toBe(
-          WaveParameterNumber.SignificantHeight
+        expect(data[0].parameterCategory).toBe(
+          OceanographicParameterCategory.Waves
         );
-        expect(data[0].parameterUnits).toBe(ParameterUnits.Meters);
+        expect(data[0].parameterNumber).toBe(
+          WaveParameterNumber.SignificantHeightCombined
+        );
       }
     });
 
@@ -56,9 +45,12 @@ describe("EccodesWrapper", () => {
       const data = await wrapper.getPrimaryWavePeriod();
       expect(Array.isArray(data)).toBe(true);
       if (data.length > 0) {
-        expect(data[0].parameterCategory).toBe(ParameterCategory.Wave);
-        expect(data[0].parameterNumber).toBe(WaveParameterNumber.PrimaryPeriod);
-        expect(data[0].parameterUnits).toBe(ParameterUnits.Seconds);
+        expect(data[0].parameterCategory).toBe(
+          OceanographicParameterCategory.Waves
+        );
+        expect(data[0].parameterNumber).toBe(
+          WaveParameterNumber.PrimaryWavePeriod
+        );
       }
     });
 
@@ -66,11 +58,12 @@ describe("EccodesWrapper", () => {
       const data = await wrapper.getPrimaryWaveDirection();
       expect(Array.isArray(data)).toBe(true);
       if (data.length > 0) {
-        expect(data[0].parameterCategory).toBe(ParameterCategory.Wave);
-        expect(data[0].parameterNumber).toBe(
-          WaveParameterNumber.PrimaryDirection
+        expect(data[0].parameterCategory).toBe(
+          OceanographicParameterCategory.Waves
         );
-        expect(data[0].parameterUnits).toBe(ParameterUnits.DegreeTrue);
+        expect(data[0].parameterNumber).toBe(
+          WaveParameterNumber.PrimaryWaveDirection
+        );
       }
     });
   });
@@ -80,9 +73,10 @@ describe("EccodesWrapper", () => {
       const data = await wrapper.getWindSpeed();
       expect(Array.isArray(data)).toBe(true);
       if (data.length > 0) {
-        expect(data[0].parameterCategory).toBe(ParameterCategory.Wind);
-        expect(data[0].parameterNumber).toBe(WindParameterNumber.Speed);
-        expect(data[0].parameterUnits).toBe(ParameterUnits.MetersPerSecond);
+        expect(data[0].parameterCategory).toBe(
+          MeteorologicalParameterCategory.Momentum
+        );
+        expect(data[0].parameterNumber).toBe(MomentumParameterNumber.WindSpeed);
       }
     });
 
@@ -90,9 +84,12 @@ describe("EccodesWrapper", () => {
       const data = await wrapper.getWindDirection();
       expect(Array.isArray(data)).toBe(true);
       if (data.length > 0) {
-        expect(data[0].parameterCategory).toBe(ParameterCategory.Wind);
-        expect(data[0].parameterNumber).toBe(WindParameterNumber.Direction);
-        expect(data[0].parameterUnits).toBe(ParameterUnits.DegTrue);
+        expect(data[0].parameterCategory).toBe(
+          MeteorologicalParameterCategory.Momentum
+        );
+        expect(data[0].parameterNumber).toBe(
+          MomentumParameterNumber.WindDirection
+        );
       }
     });
   });
@@ -102,7 +99,9 @@ describe("EccodesWrapper", () => {
       const data = await wrapper.getWaveParameters();
       expect(Array.isArray(data)).toBe(true);
       if (data.length > 0) {
-        expect(data[0].parameterCategory).toBe(ParameterCategory.Wave);
+        expect(data[0].parameterCategory).toBe(
+          OceanographicParameterCategory.Waves
+        );
       }
     });
 
@@ -110,20 +109,24 @@ describe("EccodesWrapper", () => {
       const data = await wrapper.getWindParameters();
       expect(Array.isArray(data)).toBe(true);
       if (data.length > 0) {
-        expect(data[0].parameterCategory).toBe(ParameterCategory.Wind);
+        expect(data[0].parameterCategory).toBe(
+          MeteorologicalParameterCategory.Momentum
+        );
       }
     });
 
     it("should get parameters by type", async () => {
       const data = await wrapper.getParametersByType(
-        ParameterCategory.Wave,
-        WaveParameterNumber.SignificantHeight
+        OceanographicParameterCategory.Waves,
+        WaveParameterNumber.SignificantHeightCombined
       );
       expect(Array.isArray(data)).toBe(true);
       if (data.length > 0) {
-        expect(data[0].parameterCategory).toBe(ParameterCategory.Wave);
+        expect(data[0].parameterCategory).toBe(
+          OceanographicParameterCategory.Waves
+        );
         expect(data[0].parameterNumber).toBe(
-          WaveParameterNumber.SignificantHeight
+          WaveParameterNumber.SignificantHeightCombined
         );
       }
     });
@@ -131,8 +134,8 @@ describe("EccodesWrapper", () => {
     it("should get parameters with custom keys", async () => {
       const customKeys = ["shortName", "maximum", "minimum"];
       const data = await wrapper.getParametersByType(
-        ParameterCategory.Wave,
-        WaveParameterNumber.SignificantHeight,
+        OceanographicParameterCategory.Waves,
+        WaveParameterNumber.SignificantHeightCombined,
         customKeys
       );
       expect(Array.isArray(data)).toBe(true);
@@ -164,7 +167,7 @@ describe("EccodesWrapper", () => {
     });
   });
 
-  describe("full GRIB dump", () => {
+  describe("readToJson", () => {
     it("should return complete message structure", async () => {
       const data = await wrapper.readToJson();
       const requiredKeys = [

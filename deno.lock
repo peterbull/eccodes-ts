@@ -16,7 +16,8 @@
     "npm:typescript@^5.7.2": "5.7.2",
     "npm:vite-plugin-dts@^4.3.0": "4.3.0_typescript@5.7.2_vite@6.0.3__@types+node@22.10.2_@types+node@22.10.2",
     "npm:vite@^6.0.3": "6.0.3_@types+node@22.10.2",
-    "npm:vitest@^2.1.8": "2.1.8_@types+node@22.10.2_@vitest+ui@2.1.8__vitest@2.1.8__@types+node@22.10.2_vite@5.4.11__@types+node@22.10.2"
+    "npm:vitest@*": "2.1.8_@types+node@22.10.2_@vitest+ui@2.1.8__vitest@2.1.8___@types+node@22.10.2___@vitest+ui@2.1.8___vite@5.4.11____@types+node@22.10.2__@types+node@22.10.2_vite@5.4.11__@types+node@22.10.2",
+    "npm:vitest@^2.1.8": "2.1.8_@types+node@22.10.2_@vitest+ui@2.1.8__vitest@2.1.8___@types+node@22.10.2___@vitest+ui@2.1.8___vite@5.4.11____@types+node@22.10.2__@types+node@22.10.2_vite@5.4.11__@types+node@22.10.2"
   },
   "npm": {
     "@ampproject/remapping@2.3.0": {
@@ -859,6 +860,19 @@
         "tinyglobby",
         "tinyrainbow",
         "vitest@2.1.8_@types+node@22.10.2_@vitest+ui@2.1.8__vitest@2.1.8__@types+node@22.10.2_vite@5.4.11__@types+node@22.10.2_@vitest+ui@2.1.8__vitest@2.1.8___@types+node@22.10.2___@vitest+ui@2.1.8___vite@5.4.11____@types+node@22.10.2__@types+node@22.10.2"
+      ]
+    },
+    "@vitest/ui@2.1.8_vitest@2.1.8__@types+node@22.10.2__@vitest+ui@2.1.8__vite@5.4.11___@types+node@22.10.2_@types+node@22.10.2_vitest@2.1.8__@types+node@22.10.2__@vitest+ui@2.1.8___vitest@2.1.8____@types+node@22.10.2____@vitest+ui@2.1.8____vite@5.4.11_____@types+node@22.10.2___@types+node@22.10.2__vite@5.4.11___@types+node@22.10.2": {
+      "integrity": "sha512-5zPJ1fs0ixSVSs5+5V2XJjXLmNzjugHRyV11RqxYVR+oMcogZ9qTuSfKW+OcTV0JeFNznI83BNylzH6SSNJ1+w==",
+      "dependencies": [
+        "@vitest/utils",
+        "fflate",
+        "flatted",
+        "pathe",
+        "sirv",
+        "tinyglobby",
+        "tinyrainbow",
+        "vitest@2.1.8_@types+node@22.10.2_@vitest+ui@2.1.8__vitest@2.1.8___@types+node@22.10.2___@vitest+ui@2.1.8___vite@5.4.11____@types+node@22.10.2__@types+node@22.10.2_vite@5.4.11__@types+node@22.10.2"
       ]
     },
     "@vitest/utils@2.1.8": {
@@ -2258,7 +2272,7 @@
         "@vitest/runner",
         "@vitest/snapshot",
         "@vitest/spy",
-        "@vitest/ui@2.1.8_vitest@2.1.8__@types+node@22.10.2__@vitest+ui@2.1.8___vitest@2.1.8___@types+node@22.10.2__vite@5.4.11___@types+node@22.10.2_vitest@2.1.8__@types+node@22.10.2__@vitest+ui@2.1.8___vitest@2.1.8____@types+node@22.10.2____@vitest+ui@2.1.8____vite@5.4.11_____@types+node@22.10.2___@types+node@22.10.2__vite@5.4.11___@types+node@22.10.2_@types+node@22.10.2",
+        "@vitest/ui@2.1.8_vitest@2.1.8__@types+node@22.10.2__@vitest+ui@2.1.8__vite@5.4.11___@types+node@22.10.2_@types+node@22.10.2_vitest@2.1.8__@types+node@22.10.2__@vitest+ui@2.1.8___vitest@2.1.8____@types+node@22.10.2____@vitest+ui@2.1.8____vite@5.4.11_____@types+node@22.10.2___@types+node@22.10.2__vite@5.4.11___@types+node@22.10.2",
         "@vitest/utils",
         "chai",
         "debug",
@@ -2330,6 +2344,9 @@
     "https://deno.land/x/display@v1.1.2/mod.ts": "077bedee868852e0f220763d6781d8bcc077f68f0e3269a60e02e93a42c54b70"
   },
   "workspace": {
+    "dependencies": [
+      "npm:vitest@*"
+    ],
     "packageJson": {
       "dependencies": [
         "npm:@trivago/prettier-plugin-sort-imports@^5.2.0",

@@ -5,10 +5,12 @@ import {
   WaveParameter,
   WindParameter,
   GribParameter,
-  ParameterCategory,
-  WaveParameterNumber,
-  WindParameterNumber,
+  ParameterNumber,
 } from "@/types/types";
+import { OceanographicParameterCategory } from "@/types/discipline/oceanographicProducts/categories";
+import { WaveParameterNumber } from "@/types/discipline/oceanographicProducts/waves";
+import { MomentumParameterNumber } from "@/types/discipline/meteorologicalProducts/momentum";
+import { MeteorologicalParameterCategory } from "@/types/discipline/meteorologicalProducts/categories";
 
 const ESSENTIAL_KEYS = [
   "parameterCategory",
@@ -43,6 +45,11 @@ const METADATA_KEYS = [
   "numberOfMissing",
   "getNumberOfValues",
 ].join(",");
+
+type CommandStreamParams = {
+  category: OceanographicParameterCategory | MeteorologicalParameterCategory;
+  number?: ParameterNumber;
+};
 
 export class EccodesWrapper {
   constructor(private gribFilePath: string) {
@@ -166,47 +173,81 @@ export class EccodesWrapper {
     });
   }
 
+  getCommandStreamParams({ category, number }: CommandStreamParams) {
+    const params = [];
+    if (category) {
+      params.push(`parameterCategory=${category}`);
+    }
+    if (number) {
+      params.push(`parameterNumber=${number}`);
+    }
+    return params.join(",");
+  }
+
   async getSignificantWaveHeight(): Promise<WaveParameter[]> {
     return this.execGribCommandStream<WaveParameter>(
-      "parameterCategory=0,parameterNumber=3"
+      this.getCommandStreamParams({
+        category: OceanographicParameterCategory.Waves,
+        number: WaveParameterNumber.SignificantHeightCombined,
+      })
     );
   }
 
   async getPrimaryWavePeriod(): Promise<WaveParameter[]> {
     return this.execGribCommandStream<WaveParameter>(
-      "parameterCategory=0,parameterNumber=11"
+      this.getCommandStreamParams({
+        category: OceanographicParameterCategory.Waves,
+        number: WaveParameterNumber.PrimaryWavePeriod,
+      })
     );
   }
 
   async getPrimaryWaveDirection(): Promise<WaveParameter[]> {
     return this.execGribCommandStream<WaveParameter>(
-      "parameterCategory=0,parameterNumber=10"
+      this.getCommandStreamParams({
+        category: OceanographicParameterCategory.Waves,
+        number: WaveParameterNumber.PrimaryWaveDirection,
+      })
     );
   }
 
   async getWindSpeed(): Promise<WindParameter[]> {
     return this.execGribCommandStream<WindParameter>(
-      "parameterCategory=2,parameterNumber=1"
+      this.getCommandStreamParams({
+        category: MeteorologicalParameterCategory.Momentum,
+        number: MomentumParameterNumber.WindSpeed,
+      })
     );
   }
 
   async getWindDirection(): Promise<WindParameter[]> {
     return this.execGribCommandStream<WindParameter>(
-      "parameterCategory=2,parameterNumber=0"
+      this.getCommandStreamParams({
+        category: MeteorologicalParameterCategory.Momentum,
+        number: MomentumParameterNumber.WindDirection,
+      })
     );
   }
 
   async getWaveParameters(): Promise<WaveParameter[]> {
-    return this.execGribCommandStream<WaveParameter>("parameterCategory=0");
+    return this.execGribCommandStream<WaveParameter>(
+      this.getCommandStreamParams({
+        category: OceanographicParameterCategory.Waves,
+      })
+    );
   }
 
   async getWindParameters(): Promise<WindParameter[]> {
-    return this.execGribCommandStream<WindParameter>("parameterCategory=2");
+    return this.execGribCommandStream<WindParameter>(
+      this.getCommandStreamParams({
+        category: MeteorologicalParameterCategory.Momentum,
+      })
+    );
   }
 
   async getParametersByType<T extends GribParameter>(
-    category: ParameterCategory,
-    paramNumber: WaveParameterNumber | WindParameterNumber,
+    category: OceanographicParameterCategory,
+    paramNumber: WaveParameterNumber | MomentumParameterNumber,
     keys?: string[]
   ): Promise<T[]> {
     const specificKeys = keys ? keys.join(",") : ESSENTIAL_KEYS;
@@ -227,4 +268,8 @@ export class EccodesWrapper {
 
 export type { BaseGrib2Message, WaveParameter, WindParameter, GribParameter };
 
-export { ParameterCategory, WaveParameterNumber, WindParameterNumber };
+export {
+  OceanographicParameterCategory as ParameterCategory,
+  WaveParameterNumber,
+  MomentumParameterNumber,
+};
