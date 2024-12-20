@@ -8,9 +8,9 @@ async function main() {
     const data = await wrapper.readToJson();
     console.log("GRIB data:", data);
 
-    // Get specific keys
-    const keys = await wrapper.getKeys(["shortName", "level", "date"]);
-    console.log("Specific keys:", keys);
+    // Get specific data
+    const swh = wrapper.getSignificantWaveHeight();
+    console.log("Specific keys:", swh);
   } catch (error) {
     console.error("Error:", error);
   }
