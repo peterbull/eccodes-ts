@@ -1,6 +1,6 @@
 import { GribParameterUnits } from "@/types/discipline/units/types";
 
-export enum MomentumParameterNumber {
+export enum MeteorologicalMomentumParameterNumber {
   WindDirection = 0,
   WindSpeed = 1,
   UComponentWind = 2,
@@ -120,7 +120,7 @@ export enum MomentumParameterNumber {
   Missing = 255,
 }
 
-export enum MomentumParameterUnits {
+export enum MeteorologicalMomentumParameterUnits {
   Degrees = GribParameterUnits.Degrees,
   MetersPerSecond = GribParameterUnits.MetersPerSecond,
   SquareMetersPerSecond = GribParameterUnits.SquareMetersPerSecond,

@@ -1,6 +1,6 @@
 import { GribParameterUnits } from "@/types/discipline/units/types";
 
-export enum WaveParameterNumber {
+export enum OceanographicWaveParameterNumber {
   WaveSpectra1 = 0,
   WaveSpectra2 = 1,
   WaveSpectra3 = 2,
@@ -107,7 +107,7 @@ export enum WaveParameterNumber {
   Missing = 255,
 }
 
-export enum WaveParameterUnits {
+export enum OceanographicWaveParameterUnits {
   Meters = GribParameterUnits.Meters,
   Seconds = GribParameterUnits.Seconds,
   DegreeTrue = GribParameterUnits.DegreeTrue,
