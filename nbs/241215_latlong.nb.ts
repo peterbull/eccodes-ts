@@ -17,23 +17,52 @@ const datapath = `./data/gefs.wave.grib2`;
 const res = new EccodesWrapper(datapath);
 
 //#nbts@code
+const waveHeight = await res.getSignificantWaveHeight();
 
 //#nbts@code
-await res.getSignificantWaveHeight();
+type LocationForecast = {
+  lat: number;
+  lon: number;
+  value: number;
+};
 
 //#nbts@code
-const data = await res.getSignificantWaveHeight();
+waveHeight[0].values.filter(
+  (item: LocationForecast) => item.lat === 39.5 && item.lon === -170
+);
 
 //#nbts@code
-const df = pl.DataFrame(data);
+function convertLongitude(lon: number) {
+  return lon > 180 ? lon - 360 : lon;
+}
+
+//#nbts@code
+let index = 0;
+const spotForecast = [];
+for (let j = 0; j < 721; j++) {
+  const lat = 90 - j * 0.25;
+  for (let i = 0; i < 1440; i++) {
+    let lon = i * 0.25;
+    lon = convertLongitude(lon);
+    const value = waveHeight[0].values[index];
+    const res: LocationForecast = {
+      lat: lat,
+      lon: lon,
+      value: value,
+    };
+    spotForecast.push(res);
+    index++;
+  }
+}
+
+//#nbts@code
+spotForecast.filter((item) => item.lat === 39.5 && item.lon === -170);
+
+//#nbts@code
+const df = pl.DataFrame(spotForecast);
 
 //#nbts@code
 dfShow();
-
-//#nbts@code
-const categoryKeys = Object.keys(ParameterCategory).filter((key) =>
-  isNaN(Number(key))
-);
 
 //#nbts@code
 await res.getSignificantWaveHeight();
