@@ -2,18 +2,6 @@
 //#nbts@code
 import { EccodesWrapper } from "../src/index.ts";
 import pl from "npm:nodejs-polars";
-import {
-  ParameterUnits,
-  BaseGrib2Message,
-  WaveParameter,
-  WindParameter,
-  GribParameter,
-  ParameterCategory,
-  WaveParameterNumber,
-  WindParameterNumber,
-  GribMetadata,
-  ParameterMetadata,
-} from "../src/types/types.ts";
 
 //#nbts@code
 function dfShow() {
@@ -32,7 +20,7 @@ const res = new EccodesWrapper(datapath);
 await res.getPrimaryWaveDirection();
 
 //#nbts@code
-const data = await res.readToJson();
+const data = await res.getSignificantWaveHeight();
 
 //#nbts@code
 const df = pl.DataFrame(data);

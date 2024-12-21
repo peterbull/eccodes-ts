@@ -5,11 +5,11 @@ import {
   WaveParameter,
   WindParameter,
   GribParameter,
-  ParameterNumber,
+  Discipline,
 } from "@/types/types";
 import { OceanographicParameterCategory } from "@/types/discipline/oceanographicProducts/categories";
-import { WaveParameterNumber } from "@/types/discipline/oceanographicProducts/waves";
-import { MomentumParameterNumber } from "@/types/discipline/meteorologicalProducts/momentum";
+import { OceanographicWaveParameterNumber } from "@/types/discipline/oceanographicProducts/waves";
+import { MeteorologicalMomentumParameterNumber } from "@/types/discipline/meteorologicalProducts/momentum";
 import { MeteorologicalParameterCategory } from "@/types/discipline/meteorologicalProducts/categories";
 
 const ESSENTIAL_KEYS = [
@@ -47,8 +47,11 @@ const METADATA_KEYS = [
 ].join(",");
 
 type CommandStreamParams = {
+  discipline?: Discipline;
   category: OceanographicParameterCategory | MeteorologicalParameterCategory;
-  number?: ParameterNumber;
+  number?:
+    | OceanographicWaveParameterNumber
+    | MeteorologicalMomentumParameterNumber;
 };
 
 export class EccodesWrapper {
@@ -80,6 +83,22 @@ export class EccodesWrapper {
       args.push("-p", specificKeys, this.gribFilePath);
 
       const process = spawn("grib_dump", args);
+
+      process.on("error", (error) => {
+        if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+          reject(
+            new Error(
+              "grib_dump command not found. Please ensure eccodes is installed:\n" +
+                "- On MacOS: brew install eccodes\n" +
+                "- On Ubuntu: apt-get install libeccodes-dev\n" +
+                "- On Windows: Install WSL and use Ubuntu package\n\n" +
+                "If already installed, check if grib_dump is in your PATH"
+            )
+          );
+        } else {
+          reject(error);
+        }
+      });
 
       const rl = readline.createInterface({
         input: process.stdout,
@@ -173,14 +192,25 @@ export class EccodesWrapper {
     });
   }
 
-  getCommandStreamParams({ category, number }: CommandStreamParams) {
-    const params = [];
-    if (category) {
+  getCommandStreamParams({
+    discipline,
+    category,
+    number,
+  }: CommandStreamParams): string {
+    const params: string[] = [];
+
+    if (discipline !== undefined) {
+      params.push(`discipline=${discipline}`);
+    }
+
+    if (category !== undefined) {
       params.push(`parameterCategory=${category}`);
     }
-    if (number) {
+
+    if (number !== undefined) {
       params.push(`parameterNumber=${number}`);
     }
+
     return params.join(",");
   }
 
@@ -188,7 +218,7 @@ export class EccodesWrapper {
     return this.execGribCommandStream<WaveParameter>(
       this.getCommandStreamParams({
         category: OceanographicParameterCategory.Waves,
-        number: WaveParameterNumber.SignificantHeightCombined,
+        number: OceanographicWaveParameterNumber.SignificantHeightCombined,
       })
     );
   }
@@ -197,7 +227,7 @@ export class EccodesWrapper {
     return this.execGribCommandStream<WaveParameter>(
       this.getCommandStreamParams({
         category: OceanographicParameterCategory.Waves,
-        number: WaveParameterNumber.PrimaryWavePeriod,
+        number: OceanographicWaveParameterNumber.PrimaryWavePeriod,
       })
     );
   }
@@ -206,7 +236,7 @@ export class EccodesWrapper {
     return this.execGribCommandStream<WaveParameter>(
       this.getCommandStreamParams({
         category: OceanographicParameterCategory.Waves,
-        number: WaveParameterNumber.PrimaryWaveDirection,
+        number: OceanographicWaveParameterNumber.PrimaryWaveDirection,
       })
     );
   }
@@ -215,7 +245,7 @@ export class EccodesWrapper {
     return this.execGribCommandStream<WindParameter>(
       this.getCommandStreamParams({
         category: MeteorologicalParameterCategory.Momentum,
-        number: MomentumParameterNumber.WindSpeed,
+        number: MeteorologicalMomentumParameterNumber.WindSpeed,
       })
     );
   }
@@ -224,7 +254,7 @@ export class EccodesWrapper {
     return this.execGribCommandStream<WindParameter>(
       this.getCommandStreamParams({
         category: MeteorologicalParameterCategory.Momentum,
-        number: MomentumParameterNumber.WindDirection,
+        number: MeteorologicalMomentumParameterNumber.WindDirection,
       })
     );
   }
@@ -247,7 +277,9 @@ export class EccodesWrapper {
 
   async getParametersByType<T extends GribParameter>(
     category: OceanographicParameterCategory,
-    paramNumber: WaveParameterNumber | MomentumParameterNumber,
+    paramNumber:
+      | OceanographicWaveParameterNumber
+      | MeteorologicalMomentumParameterNumber,
     keys?: string[]
   ): Promise<T[]> {
     const specificKeys = keys ? keys.join(",") : ESSENTIAL_KEYS;
@@ -270,6 +302,6 @@ export type { BaseGrib2Message, WaveParameter, WindParameter, GribParameter };
 
 export {
   OceanographicParameterCategory as ParameterCategory,
-  WaveParameterNumber,
-  MomentumParameterNumber,
+  OceanographicWaveParameterNumber as WaveParameterNumber,
+  MeteorologicalMomentumParameterNumber as MomentumParameterNumber,
 };

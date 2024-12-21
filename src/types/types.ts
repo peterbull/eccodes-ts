@@ -1,10 +1,10 @@
 import { MeteorologicalParameterCategory } from "@/types/discipline/meteorologicalProducts/categories";
-import { MomentumParameterNumber } from "@/types/discipline/meteorologicalProducts/momentum";
+import { MeteorologicalMomentumParameterNumber } from "@/types/discipline/meteorologicalProducts/momentum";
 import { OceanographicParameterCategory } from "@/types/discipline/oceanographicProducts/categories";
-import { WaveParameterNumber } from "@/types/discipline/oceanographicProducts/waves";
+import { OceanographicWaveParameterNumber } from "@/types/discipline/oceanographicProducts/waves";
 import { GribParameterUnits } from "@/types/discipline/units/types";
 
-export enum DisciplineCategory {
+export enum Discipline {
   Meteorological = 0,
   Hydrological = 1,
   LandSurface = 2,
@@ -15,7 +15,9 @@ export enum DisciplineCategory {
   Missing = 255,
 }
 
-export type ParameterNumber = WaveParameterNumber | MomentumParameterNumber;
+export type ParameterNumber =
+  | OceanographicWaveParameterNumber
+  | MeteorologicalMomentumParameterNumber;
 
 // Base GRIB2 message interface
 export interface BaseGrib2Message {
@@ -57,7 +59,9 @@ export interface BaseGrib2Message {
   parameterCategory:
     | OceanographicParameterCategory
     | MeteorologicalParameterCategory;
-  parameterNumber: WaveParameterNumber | MomentumParameterNumber;
+  parameterNumber:
+    | OceanographicWaveParameterNumber
+    | MeteorologicalMomentumParameterNumber;
   parameterUnits: GribParameterUnits;
   parameterName: string;
   shortName: string;
@@ -67,7 +71,7 @@ export interface BaseGrib2Message {
 // Wave Parameter Interfaces
 export interface WaveHeight extends BaseGrib2Message {
   parameterCategory: OceanographicParameterCategory.Waves;
-  parameterNumber: WaveParameterNumber.SignificantHeightCombined;
+  parameterNumber: OceanographicWaveParameterNumber.SignificantHeightCombined;
   parameterUnits: GribParameterUnits.Meters;
   parameterName: "Significant height of combined wind waves and swell";
   shortName: "swh";
@@ -76,7 +80,7 @@ export interface WaveHeight extends BaseGrib2Message {
 
 export interface WavePeriod extends BaseGrib2Message {
   parameterCategory: OceanographicParameterCategory.Waves;
-  parameterNumber: WaveParameterNumber.PrimaryWavePeriod;
+  parameterNumber: OceanographicWaveParameterNumber.PrimaryWavePeriod;
   parameterUnits: GribParameterUnits.Seconds;
   parameterName: "Primary wave mean period";
   shortName: "perpw";
@@ -85,7 +89,7 @@ export interface WavePeriod extends BaseGrib2Message {
 
 export interface WaveDirection extends BaseGrib2Message {
   parameterCategory: OceanographicParameterCategory.Waves;
-  parameterNumber: WaveParameterNumber.PrimaryWaveDirection;
+  parameterNumber: OceanographicWaveParameterNumber.PrimaryWaveDirection;
   parameterUnits: GribParameterUnits.DegreeTrue;
   parameterName: "Primary wave direction";
   shortName: "dirpw";
@@ -95,7 +99,7 @@ export interface WaveDirection extends BaseGrib2Message {
 // Wind Parameter Interfaces
 export interface WindSpeed extends BaseGrib2Message {
   parameterCategory: MeteorologicalParameterCategory.Momentum;
-  parameterNumber: MomentumParameterNumber.WindSpeed;
+  parameterNumber: MeteorologicalMomentumParameterNumber.WindSpeed;
   parameterUnits: GribParameterUnits.MetersPerSecond;
   parameterName: "Wind speed";
   shortName: "ws";
@@ -104,7 +108,7 @@ export interface WindSpeed extends BaseGrib2Message {
 
 export interface WindDirection extends BaseGrib2Message {
   parameterCategory: MeteorologicalParameterCategory.Momentum;
-  parameterNumber: MomentumParameterNumber.WindDirection;
+  parameterNumber: MeteorologicalMomentumParameterNumber.WindDirection;
   parameterUnits: GribParameterUnits.DegreeTrue;
   parameterName: "Wind direction (from which blowing)";
   shortName: "wdir";
@@ -115,14 +119,15 @@ export interface WindDirection extends BaseGrib2Message {
 export const isWaveHeight = (msg: BaseGrib2Message): msg is WaveHeight => {
   return (
     msg.parameterCategory === OceanographicParameterCategory.Waves &&
-    msg.parameterNumber === WaveParameterNumber.SignificantHeightCombined
+    msg.parameterNumber ===
+      OceanographicWaveParameterNumber.SignificantHeightCombined
   );
 };
 
 export const isWavePeriod = (msg: BaseGrib2Message): msg is WavePeriod => {
   return (
     msg.parameterCategory === OceanographicParameterCategory.Waves &&
-    msg.parameterNumber === WaveParameterNumber.PrimaryWavePeriod
+    msg.parameterNumber === OceanographicWaveParameterNumber.PrimaryWavePeriod
   );
 };
 
