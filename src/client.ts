@@ -12,6 +12,7 @@ import { OceanographicParameterCategory } from "@/types/discipline/oceanographic
 import { OceanographicWaveParameterNumber } from "@/types/discipline/oceanographicProducts/waves";
 import { MeteorologicalMomentumParameterNumber } from "@/types/discipline/meteorologicalProducts/momentum";
 import { MeteorologicalParameterCategory } from "@/types/discipline/meteorologicalProducts/categories";
+import { LocationForecast } from "@/types/types";
 
 const ESSENTIAL_KEYS = [
   "parameterCategory",
@@ -213,13 +214,43 @@ export class EccodesWrapper {
     return params.join(",");
   }
 
+  mapValuesToLatLon(values: number[]): LocationForecast[] {
+    const spotForecast: LocationForecast[] = new Array(values.length);
+    let index = 0;
+
+    for (let j = 0; j < 721; j++) {
+      const lat = 90 - j * 0.25;
+      for (let i = 0; i < 1440; i++) {
+        const rawLon = i * 0.25;
+        const lon = rawLon > 180 ? rawLon - 360 : rawLon;
+        spotForecast[index] = {
+          lat,
+          lon,
+          value: values[index],
+        };
+        index++;
+      }
+    }
+    return spotForecast;
+  }
+
+  addLatLonToValues<T extends BaseGrib2Message>(res: T[]) {
+    return res.map((val) => ({
+      ...val,
+      values: Array.isArray(val.values)
+        ? this.mapValuesToLatLon(val.values as number[])
+        : [],
+    }));
+  }
+
   async getSignificantWaveHeight(): Promise<WaveParameter[]> {
-    return this.execGribCommandStream<WaveParameter>(
+    const res = await this.execGribCommandStream<WaveParameter>(
       this.getCommandStreamParams({
         category: OceanographicParameterCategory.Waves,
         number: OceanographicWaveParameterNumber.SignificantHeightCombined,
       })
     );
+    return this.addLatLonToValues(res);
   }
 
   async getPrimaryWavePeriod(): Promise<WaveParameter[]> {

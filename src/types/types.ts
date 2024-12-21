@@ -22,6 +22,11 @@ export type ParameterNumber =
   | OceanographicWaveParameterNumber
   | MeteorologicalMomentumParameterNumber;
 
+export type LocationForecast = {
+  lat: number;
+  lon: number;
+  value: number | null;
+};
 // Base GRIB2 message interface
 export interface BaseGrib2Message {
   // Essential metadata
@@ -51,7 +56,7 @@ export interface BaseGrib2Message {
   stepRange: string;
 
   // Data values and statistics
-  values: (number | null)[];
+  values: (number | null | LocationForecast)[];
   maximum: number;
   minimum: number;
   average: number;
@@ -174,7 +179,7 @@ export interface ForecastMessage {
   parameterName: string;
   parameterUnits: string;
   shortName: string;
-  values: (number | null)[];
+  values: (number | null | LocationForecast)[];
   maximum: number;
   minimum: number;
   average: number;
