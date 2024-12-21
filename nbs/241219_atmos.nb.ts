@@ -1,5 +1,6 @@
+
 //#nbts@code
-import { EccodesWrapper } from "../src/client.js";
+import { EccodesWrapper } from "../src/client.ts";
 
 //#nbts@code
 const date = new Date();

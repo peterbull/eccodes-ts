@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach } from "vitest";
 import path from "path";
 import { EccodesWrapper } from "@/client";
 import { OceanographicParameterCategory } from "@/types/discipline/oceanographicProducts/categories";
-import { WaveParameterNumber } from "@/types/discipline/oceanographicProducts/waves";
-import { MomentumParameterNumber } from "@/types/discipline/meteorologicalProducts/momentum";
+import { OceanographicWaveParameterNumber } from "@/types/discipline/oceanographicProducts/waves";
+import { MeteorologicalMomentumParameterNumber } from "@/types/discipline/meteorologicalProducts/momentum";
 import { MeteorologicalParameterCategory } from "@/types/discipline/meteorologicalProducts/categories";
 
 describe("EccodesWrapper", () => {
@@ -36,7 +36,7 @@ describe("EccodesWrapper", () => {
           OceanographicParameterCategory.Waves
         );
         expect(data[0].parameterNumber).toBe(
-          WaveParameterNumber.SignificantHeightCombined
+          OceanographicWaveParameterNumber.SignificantHeightCombined
         );
       }
     });
@@ -49,7 +49,7 @@ describe("EccodesWrapper", () => {
           OceanographicParameterCategory.Waves
         );
         expect(data[0].parameterNumber).toBe(
-          WaveParameterNumber.PrimaryWavePeriod
+          OceanographicWaveParameterNumber.PrimaryWavePeriod
         );
       }
     });
@@ -62,7 +62,7 @@ describe("EccodesWrapper", () => {
           OceanographicParameterCategory.Waves
         );
         expect(data[0].parameterNumber).toBe(
-          WaveParameterNumber.PrimaryWaveDirection
+          OceanographicWaveParameterNumber.PrimaryWaveDirection
         );
       }
     });
@@ -76,7 +76,9 @@ describe("EccodesWrapper", () => {
         expect(data[0].parameterCategory).toBe(
           MeteorologicalParameterCategory.Momentum
         );
-        expect(data[0].parameterNumber).toBe(MomentumParameterNumber.WindSpeed);
+        expect(data[0].parameterNumber).toBe(
+          MeteorologicalMomentumParameterNumber.WindSpeed
+        );
       }
     });
 
@@ -88,7 +90,7 @@ describe("EccodesWrapper", () => {
           MeteorologicalParameterCategory.Momentum
         );
         expect(data[0].parameterNumber).toBe(
-          MomentumParameterNumber.WindDirection
+          MeteorologicalMomentumParameterNumber.WindDirection
         );
       }
     });
@@ -118,7 +120,7 @@ describe("EccodesWrapper", () => {
     it("should get parameters by type", async () => {
       const data = await wrapper.getParametersByType(
         OceanographicParameterCategory.Waves,
-        WaveParameterNumber.SignificantHeightCombined
+        OceanographicWaveParameterNumber.SignificantHeightCombined
       );
       expect(Array.isArray(data)).toBe(true);
       if (data.length > 0) {
@@ -126,7 +128,7 @@ describe("EccodesWrapper", () => {
           OceanographicParameterCategory.Waves
         );
         expect(data[0].parameterNumber).toBe(
-          WaveParameterNumber.SignificantHeightCombined
+          OceanographicWaveParameterNumber.SignificantHeightCombined
         );
       }
     });
@@ -135,7 +137,7 @@ describe("EccodesWrapper", () => {
       const customKeys = ["shortName", "maximum", "minimum"];
       const data = await wrapper.getParametersByType(
         OceanographicParameterCategory.Waves,
-        WaveParameterNumber.SignificantHeightCombined,
+        OceanographicWaveParameterNumber.SignificantHeightCombined,
         customKeys
       );
       expect(Array.isArray(data)).toBe(true);

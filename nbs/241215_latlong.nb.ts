@@ -1,7 +1,5 @@
 
 //#nbts@code
-export * from "../src/types/index.ts";
-
 import { EccodesWrapper } from "../src/client.ts";
 import pl from "npm:nodejs-polars";
 
