@@ -1,4 +1,4 @@
-import { EccodesWrapper } from "@/index";
+import { EccodesWrapper } from "@/client";
 
 async function main() {
   const wrapper = new EccodesWrapper("/path/to/your/file.grib");

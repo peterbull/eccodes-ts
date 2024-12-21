@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "vitest";
 import path from "path";
-import { EccodesWrapper } from "@/index";
+import { EccodesWrapper } from "@/client";
 import { OceanographicParameterCategory } from "@/types/discipline/oceanographicProducts/categories";
 import { WaveParameterNumber } from "@/types/discipline/oceanographicProducts/waves";
 import { MomentumParameterNumber } from "@/types/discipline/meteorologicalProducts/momentum";

@@ -1,6 +1,8 @@
 
 //#nbts@code
-import { EccodesWrapper } from "../src/index.ts";
+export * from "../src/types/index.ts";
+
+import { EccodesWrapper } from "../src/client.ts";
 import pl from "npm:nodejs-polars";
 
 //#nbts@code
@@ -17,7 +19,9 @@ const datapath = `./data/gefs.wave.grib2`;
 const res = new EccodesWrapper(datapath);
 
 //#nbts@code
-await res.getPrimaryWaveDirection();
+
+//#nbts@code
+await res.getSignificantWaveHeight();
 
 //#nbts@code
 const data = await res.getSignificantWaveHeight();
