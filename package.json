@@ -1,6 +1,6 @@
 {
   "name": "eccodes-ts",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "description": "TypeScript wrapper for eccodes GRIB file handling",
   "type": "module",
   "repository": {
@@ -42,6 +42,8 @@
   "keywords": [
     "eccodes",
     "grib",
+    "grib2",
+    "gfs",
     "weather",
     "meteorology"
   ],
@@ -49,12 +51,12 @@
   "license": "MIT",
   "dependencies": {
     "bindings": "^1.5.0",
-    "eslint-js": "github:eslint/js",
-    "node-addon-api": "^8.3.0",
-    "nodejs-polars": "^0.17.0",
-    "typescript-eslint": "^8.18.0"
+    "node-addon-api": "^8.3.0"
   },
   "devDependencies": {
+    "nodejs-polars": "^0.17.0",
+    "typescript-eslint": "^8.18.0",
+    "eslint-js": "github:eslint/js",
     "@trivago/prettier-plugin-sort-imports": "^5.2.0",
     "@types/jest": "^29.5.14",
     "@types/node": "^22.10.2",
