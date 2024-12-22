@@ -7,9 +7,10 @@
       "ES2020"
     ],
     "declaration": true,
-    "declarationDir": "./dist",
+    "declarationDir": "./dist/types",
     "emitDeclarationOnly": true,
     "outDir": "./dist",
+    "rootDir": "./src",
     "moduleResolution": "bundler",
     "esModuleInterop": true,
     "strict": true,

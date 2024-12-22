@@ -14,10 +14,17 @@ export default defineConfig({
       external: ["child_process", "util", "readline"],
     },
   },
-  plugins: [dts()],
+  plugins: [
+    dts({
+      include: ["src/**/*.ts"],
+      outDir: "dist/types",
+      copyDtsFiles: true,
+    }),
+  ],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "./src"),
+      "@types": path.resolve(__dirname, "./src/types"),
     },
   },
 });
