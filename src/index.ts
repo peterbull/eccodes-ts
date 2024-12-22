@@ -1,2 +1,2 @@
-export { EccodesWrapper } from "@/client";
+export * from "@/client";
 export * from "@/types";
