@@ -1,10 +1,10 @@
 import { MeteorologicalParameterCategory } from "@/types/discipline/meteorologicalProducts/categories";
-import { MomentumParameterNumber } from "@/types/discipline/meteorologicalProducts/momentum";
+import { MeteorologicalMomentumParameterNumber } from "@/types/discipline/meteorologicalProducts/momentum";
 import { OceanographicParameterCategory } from "@/types/discipline/oceanographicProducts/categories";
-import { WaveParameterNumber } from "@/types/discipline/oceanographicProducts/waves";
+import { OceanographicWaveParameterNumber } from "@/types/discipline/oceanographicProducts/waves";
 import { GribParameterUnits } from "@/types/discipline/units/types";
 
-export enum DisciplineCategory {
+export enum Discipline {
   Meteorological = 0,
   Hydrological = 1,
   LandSurface = 2,
@@ -14,13 +14,23 @@ export enum DisciplineCategory {
   HealthAndSocioeconomic = 20,
   Missing = 255,
 }
+export type ParameterCategory =
+  | OceanographicParameterCategory
+  | MeteorologicalParameterCategory;
 
-export type ParameterNumber = WaveParameterNumber | MomentumParameterNumber;
+export type ParameterNumber =
+  | OceanographicWaveParameterNumber
+  | MeteorologicalMomentumParameterNumber;
 
+export type LocationForecast = {
+  lat: number;
+  lon: number;
+  value: number | null;
+};
 // Base GRIB2 message interface
 export interface BaseGrib2Message {
   // Essential metadata
-  discipline: number;
+  discipline: Discipline;
   editionNumber: number;
   centre: number;
   subCentre: number;
@@ -46,7 +56,7 @@ export interface BaseGrib2Message {
   stepRange: string;
 
   // Data values and statistics
-  values: (number | null)[];
+  values: (number | null | LocationForecast)[];
   maximum: number;
   minimum: number;
   average: number;
@@ -54,10 +64,8 @@ export interface BaseGrib2Message {
   numberOfMissing: number;
 
   // Parameter identification
-  parameterCategory:
-    | OceanographicParameterCategory
-    | MeteorologicalParameterCategory;
-  parameterNumber: WaveParameterNumber | MomentumParameterNumber;
+  parameterCategory: ParameterCategory;
+  parameterNumber: ParameterNumber;
   parameterUnits: GribParameterUnits;
   parameterName: string;
   shortName: string;
@@ -67,62 +75,48 @@ export interface BaseGrib2Message {
 // Wave Parameter Interfaces
 export interface WaveHeight extends BaseGrib2Message {
   parameterCategory: OceanographicParameterCategory.Waves;
-  parameterNumber: WaveParameterNumber.SignificantHeightCombined;
+  parameterNumber: OceanographicWaveParameterNumber.SignificantHeightCombined;
   parameterUnits: GribParameterUnits.Meters;
-  parameterName: "Significant height of combined wind waves and swell";
-  shortName: "swh";
-  cfVarName: "swh";
 }
 
 export interface WavePeriod extends BaseGrib2Message {
   parameterCategory: OceanographicParameterCategory.Waves;
-  parameterNumber: WaveParameterNumber.PrimaryWavePeriod;
+  parameterNumber: OceanographicWaveParameterNumber.PrimaryWavePeriod;
   parameterUnits: GribParameterUnits.Seconds;
-  parameterName: "Primary wave mean period";
-  shortName: "perpw";
-  cfVarName: "perpw";
 }
 
 export interface WaveDirection extends BaseGrib2Message {
   parameterCategory: OceanographicParameterCategory.Waves;
-  parameterNumber: WaveParameterNumber.PrimaryWaveDirection;
+  parameterNumber: OceanographicWaveParameterNumber.PrimaryWaveDirection;
   parameterUnits: GribParameterUnits.DegreeTrue;
-  parameterName: "Primary wave direction";
-  shortName: "dirpw";
-  cfVarName: "dirpw";
 }
 
 // Wind Parameter Interfaces
 export interface WindSpeed extends BaseGrib2Message {
   parameterCategory: MeteorologicalParameterCategory.Momentum;
-  parameterNumber: MomentumParameterNumber.WindSpeed;
+  parameterNumber: MeteorologicalMomentumParameterNumber.WindSpeed;
   parameterUnits: GribParameterUnits.MetersPerSecond;
-  parameterName: "Wind speed";
-  shortName: "ws";
-  cfVarName: "ws";
 }
 
 export interface WindDirection extends BaseGrib2Message {
   parameterCategory: MeteorologicalParameterCategory.Momentum;
-  parameterNumber: MomentumParameterNumber.WindDirection;
+  parameterNumber: MeteorologicalMomentumParameterNumber.WindDirection;
   parameterUnits: GribParameterUnits.DegreeTrue;
-  parameterName: "Wind direction (from which blowing)";
-  shortName: "wdir";
-  cfVarName: "wdir";
 }
 
 // Type guards
 export const isWaveHeight = (msg: BaseGrib2Message): msg is WaveHeight => {
   return (
     msg.parameterCategory === OceanographicParameterCategory.Waves &&
-    msg.parameterNumber === WaveParameterNumber.SignificantHeightCombined
+    msg.parameterNumber ===
+      OceanographicWaveParameterNumber.SignificantHeightCombined
   );
 };
 
 export const isWavePeriod = (msg: BaseGrib2Message): msg is WavePeriod => {
   return (
     msg.parameterCategory === OceanographicParameterCategory.Waves &&
-    msg.parameterNumber === WaveParameterNumber.PrimaryWavePeriod
+    msg.parameterNumber === OceanographicWaveParameterNumber.PrimaryWavePeriod
   );
 };
 
@@ -185,7 +179,7 @@ export interface ForecastMessage {
   parameterName: string;
   parameterUnits: string;
   shortName: string;
-  values: (number | null)[];
+  values: (number | null | LocationForecast)[];
   maximum: number;
   minimum: number;
   average: number;

@@ -21,16 +21,20 @@ export enum GribParameterUnits {
   SquareMetersPerSecondSquared = "m2 s-2",
   SquareMeters = "m2",
   CubicMeters = "m3",
+  CubicMetersPerSquareMeter = "m3m-2", // New
 
   // Pressure and force related
   NewtonsPerSquareMeter = "N m-2",
   NewtonsPerSquareMeterSeconds = "N m-2 s",
   PascalsPerSecond = "Pa s-1",
+  PascalMeters = "Pa m", // New
+  NewtonsPerMeter = "N m-1", // New
 
   // Energy and power related
   WattsPerSquareMeter = "W m-2",
   WattsPerMeter = "W m-1",
   JoulesPerKilogram = "J kg-1",
+  JoulesPerSquareMeter = "J m-2", // New
 
   // Density related
   KilogramsPerCubicMeter = "kg m-3",

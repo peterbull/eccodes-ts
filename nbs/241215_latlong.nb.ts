@@ -1,19 +1,7 @@
 
 //#nbts@code
-import { EccodesWrapper } from "../src/index.ts";
+import { EccodesWrapper } from "../src/client.ts";
 import pl from "npm:nodejs-polars";
-import {
-  ParameterUnits,
-  BaseGrib2Message,
-  WaveParameter,
-  WindParameter,
-  GribParameter,
-  ParameterCategory,
-  WaveParameterNumber,
-  WindParameterNumber,
-  GribMetadata,
-  ParameterMetadata,
-} from "../src/types/types.ts";
 
 //#nbts@code
 function dfShow() {
@@ -29,21 +17,55 @@ const datapath = `./data/gefs.wave.grib2`;
 const res = new EccodesWrapper(datapath);
 
 //#nbts@code
-await res.getPrimaryWaveDirection();
+await res.readToJson();
 
 //#nbts@code
-const data = await res.readToJson();
+const waveHeight = await res.getSignificantWaveHeight();
 
 //#nbts@code
-const df = pl.DataFrame(data);
+type LocationForecast = {
+  lat: number;
+  lon: number;
+  value: number;
+};
+
+//#nbts@code
+waveHeight[0].values.filter(
+  (item: LocationForecast) => item.lat === 39.5 && item.lon === -170
+);
+
+//#nbts@code
+function convertLongitude(lon: number) {
+  return lon > 180 ? lon - 360 : lon;
+}
+
+//#nbts@code
+let index = 0;
+const spotForecast = [];
+for (let j = 0; j < 721; j++) {
+  const lat = 90 - j * 0.25;
+  for (let i = 0; i < 1440; i++) {
+    let lon = i * 0.25;
+    lon = convertLongitude(lon);
+    const value = waveHeight[0].values[index];
+    const res: LocationForecast = {
+      lat: lat,
+      lon: lon,
+      value: value,
+    };
+    spotForecast.push(res);
+    index++;
+  }
+}
+
+//#nbts@code
+spotForecast.filter((item) => item.lat === 39.5 && item.lon === -170);
+
+//#nbts@code
+const df = pl.DataFrame(spotForecast);
 
 //#nbts@code
 dfShow();
-
-//#nbts@code
-const categoryKeys = Object.keys(ParameterCategory).filter((key) =>
-  isNaN(Number(key))
-);
 
 //#nbts@code
 await res.getSignificantWaveHeight();

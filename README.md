@@ -13,8 +13,9 @@ npm install eccodes-ts
 - eccodes must be installed on your system
     - Ubuntu/Debian: `sudo apt-get install libeccodes-dev libeccodes-tools`
     - macOS: `brew install eccodes`
-- If you encounter any issues it's generally recommened to build from source:
-    - [Installation Instructions](https://github.com/ecmwf/eccodes/#INSTALLATION)
+    - Windows: Install WSL and use Ubuntu package
+- If you encounter any issues it's generally recommended to build from source:
+    - [Installation Instructions](https://confluence.ecmwf.int/display/ECC/ecCodes+installation)
 - Node.js 14 or higher
 
 ## Usage
@@ -25,68 +26,90 @@ import { EccodesWrapper } from 'eccodes-ts';
 // Initialize with path to GRIB file
 const grib = new EccodesWrapper('/path/to/your/file.grib');
 
-// Get specific parameters
-const waveHeight = await grib.getSignificantWaveHeight();
-const windSpeed = await grib.getWindSpeed();
+// Get specific parameters with optional lat/lon mapping
+const waveHeight = await grib.getSignificantWaveHeight({ addLatLon: true });
+const windSpeed = await grib.getWindSpeed({ addLatLon: true });
 
 // Get all wave or wind parameters
 const waveParams = await grib.getWaveParameters();
 const windParams = await grib.getWindParameters();
 
 // Custom parameter extraction
-const customParams = await grib.getParametersByType(
-    ParameterCategory.WAVES,
-    WaveParameterNumber.SIGNIFICANT_HEIGHT
-);
+const customParams = await grib.getParametersByType({
+        category: OceanographicParameterCategory.Waves,
+        number: OceanographicWaveParameterNumber.SignificantHeightCombined
+});
 ```
 
-## Supported Parameters
+## Features
 
-### Wave Parameters
-
-- Significant Wave Height
-- Primary Wave Period
-- Primary Wave Direction
-
-### Wind Parameters
-
-- Wind Speed
-- Wind Direction
-
-## Parameter Access
-
-The library supports accessing all GRIB parameters in two ways:
-
-### 1. Type-Safe Convenience Methods
-
-Pre-defined methods with full TypeScript support for common parameters:
+### Parameter Access Methods
 
 #### Wave Parameters
-- `getSignificantWaveHeight()`
-- `getPrimaryWavePeriod()`
-- `getPrimaryWaveDirection()`
-- `getWaveParameters()` 
+
+- `getSignificantWaveHeight(options?: GribParsingOptions)`
+- `getPrimaryWavePeriod(options?: GribParsingOptions)`
+- `getPrimaryWaveDirection(options?: GribParsingOptions)`
+- `getWaveParameters(options?: GribParsingOptions)`
 
 #### Wind Parameters
-- `getWindSpeed()`
-- `getWindDirection()`
-- `getWindParameters()` 
 
-### 2. Generic Access
+- `getWindSpeed(options?: GribParsingOptions)`
+- `getWindDirection(options?: GribParsingOptions)`
+- `getWindParameters(options?: GribParsingOptions)`
 
-For other parameters, use these methods:
+### Generic Access
+
+- `getParametersByType<T>(options: GribParametersByType)`
+- `getMetadata()`
+- `readToJson(addLatLon?: boolean)`
+
+### Options
 
 ```typescript
-// Type-safe access using parameter enums
-const customParams = await grib.getParametersByType(
-    ParameterCategory.WAVES,
-    WaveParameterNumber.SIGNIFICANT_HEIGHT
-);
+type GribParsingOptions = {
+    addLatLon?: boolean;
+};
 
-// Full access to any GRIB parameter
-const allParams = await grib.readToJson();
+type GribParametersByType = {
+    discipline?: Discipline;
+    category: ParameterCategory;
+    number?: ParameterNumber;
+    keys?: string[];
+    addLatLon?: boolean;
+};
 ```
 
+### Lat/Lon Mapping
+
+When `addLatLon` is enabled, parameter values are mapped to their corresponding latitude/longitude coordinates:
+
+```typescript
+type LocationForecast = {
+    lat: number;
+    lon: number;
+    value: number;
+};
+```
+
+### Data Types
+
+The package includes comprehensive TypeScript definitions for:
+
+- GRIB2 parameters and disciplines
+- Meteorological parameters
+- Oceanographic parameters
+- Wave parameters
+- Wind parameters
+
+### Error Handling
+
+The package includes proper error handling for:
+
+- Missing eccodes installation
+- Invalid GRIB file paths
+- GRIB parsing errors
+- Command execution errors
 
 ## Contributing
 
