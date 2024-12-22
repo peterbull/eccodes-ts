@@ -347,8 +347,8 @@ export class EccodesWrapper {
     return this.execGribCommandStream(undefined, METADATA_KEYS);
   }
 
-  async readToJson(addLatLon?: boolean): Promise<BaseGrib2Message[]> {
+  async readToJson(options?: GribParsingOptions): Promise<BaseGrib2Message[]> {
     const res = await this.execFullGribDump();
-    return addLatLon ? this.addLatLonToGribValues(res) : res;
+    return options?.addLatLon ? this.addLatLonToGribValues(res) : res;
   }
 }

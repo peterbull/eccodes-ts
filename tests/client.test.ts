@@ -199,7 +199,7 @@ describe("EccodesWrapper", () => {
     });
 
     it("should add lat/lon when requested", async () => {
-      const data = await wrapper.readToJson(true);
+      const data = await wrapper.readToJson({ addLatLon: true });
       expect(Array.isArray(data)).toBe(true);
       if (data.length > 0 && Array.isArray(data[0].values)) {
         expect(data[0].values[0]).toHaveProperty("lat");
