@@ -16,12 +16,6 @@ describe("EccodesWrapper", () => {
   });
 
   describe("constructor", () => {
-    it("should throw error when no file path provided", () => {
-      expect(() => new EccodesWrapper("")).toThrow(
-        "GRIB file path is required"
-      );
-    });
-
     it("should create instance with valid file path", () => {
       const customWrapper = new EccodesWrapper(testFilePath);
       expect(customWrapper).toBeInstanceOf(EccodesWrapper);

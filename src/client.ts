@@ -1,5 +1,10 @@
 import { spawn } from "child_process";
 import * as readline from "readline";
+import { Readable } from "stream";
+import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
+import { ReadableStream } from "stream/web";
 import {
   BaseGrib2Message,
   WaveParameter,
@@ -64,9 +69,58 @@ type GribParametersByType = CommandStreamParams & {
 };
 
 export class EccodesWrapper {
-  constructor(private gribFilePath: string) {
-    if (!gribFilePath) {
-      throw new Error("GRIB file path is required");
+  private tempFilePath: string | null = null;
+  private readonly gribFilePath: string;
+
+  constructor(input: string | Readable | ReadableStream<Uint8Array> | null) {
+    if (input === null) {
+      throw new Error("Input stream cannot be null");
+    }
+
+    if (typeof input === "string") {
+      this.gribFilePath = input;
+    } else if (input instanceof Readable) {
+      this.gribFilePath = this.createTempFile();
+      this.handleInputStream(input);
+    } else if (input instanceof ReadableStream) {
+      this.gribFilePath = this.createTempFile();
+      const nodeStream = Readable.fromWeb(input);
+      this.handleInputStream(nodeStream);
+    } else {
+      throw new Error("Invalid input type");
+    }
+  }
+
+  private createTempFile(): string {
+    const tempPath = path.join(os.tmpdir(), `grib-${Date.now()}.grib2`);
+    this.tempFilePath = tempPath;
+    return tempPath;
+  }
+
+  private async handleInputStream(stream: Readable): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const writeStream = fs.createWriteStream(this.gribFilePath);
+
+      stream.pipe(writeStream);
+
+      writeStream.on("finish", resolve);
+      writeStream.on("error", (err) => {
+        this.cleanup().finally(() => reject(err));
+      });
+      stream.on("error", (err) => {
+        this.cleanup().finally(() => reject(err));
+      });
+    });
+  }
+
+  public async cleanup(): Promise<void> {
+    if (this.tempFilePath) {
+      try {
+        await fs.promises.unlink(this.tempFilePath);
+        this.tempFilePath = null;
+      } catch (error) {
+        console.error("Error cleaning up temporary file:", error);
+      }
     }
   }
 
@@ -80,84 +134,90 @@ export class EccodesWrapper {
     whereClause?: string,
     specificKeys: string = ESSENTIAL_KEYS
   ): Promise<T[]> {
-    return new Promise((resolve, reject) => {
-      const messages: T[] = [];
-      let currentMessage: Partial<T> = {};
-      let errorOutput = "";
-      let currentJsonString = "";
+    try {
+      return await new Promise((resolve, reject) => {
+        const messages: T[] = [];
+        let currentMessage: Partial<T> = {};
+        let errorOutput = "";
+        let currentJsonString = "";
 
-      const whereParam = whereClause ? `-w ${whereClause}` : "";
-      const args = ["-j"];
-      if (whereParam) args.push(...whereParam.split(" "));
-      args.push("-p", specificKeys, this.gribFilePath);
+        const whereParam = whereClause ? `-w ${whereClause}` : "";
+        const args = ["-j"];
+        if (whereParam) args.push(...whereParam.split(" "));
+        args.push("-p", specificKeys, this.gribFilePath);
 
-      const process = spawn("grib_dump", args);
+        const process = spawn("grib_dump", args);
 
-      process.on("error", (error) => {
-        if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-          reject(
-            new Error(
-              "grib_dump command not found. Please ensure eccodes is installed:\n" +
-                "- On MacOS: brew install eccodes\n" +
-                "- On Ubuntu: apt-get install libeccodes-dev\n" +
-                "- On Windows: Install WSL and use Ubuntu package\n\n" +
-                "If already installed, check if grib_dump is in your PATH"
-            )
-          );
-        } else {
-          reject(error);
-        }
-      });
-
-      const rl = readline.createInterface({
-        input: process.stdout,
-        crlfDelay: Infinity,
-      });
-
-      rl.on("line", (line) => {
-        const trimmedLine = line.trim();
-        if (!trimmedLine) return;
-
-        currentJsonString += trimmedLine;
-
-        if (trimmedLine.endsWith("},") || trimmedLine.endsWith("}")) {
-          try {
-            const item: { key: keyof T; value: T[keyof T] } = JSON.parse(
-              currentJsonString.replace(/,$/, "")
+        process.on("error", (error) => {
+          if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+            reject(
+              new Error(
+                "grib_dump command not found. Please ensure eccodes is installed:\n" +
+                  "- On MacOS: brew install eccodes\n" +
+                  "- On Ubuntu: apt-get install libeccodes-dev\n" +
+                  "- On Windows: Install WSL and use Ubuntu package\n\n" +
+                  "If already installed, check if grib_dump is in your PATH"
+              )
             );
-            if (item.key && item.value !== undefined) {
-              currentMessage[item.key] = item.value;
-            }
-            currentJsonString = "";
-          } catch {
-            if (Object.keys(currentMessage).length > 0) {
-              messages.push({ ...currentMessage } as T);
-              currentMessage = {};
+          } else {
+            reject(error);
+          }
+        });
+
+        const rl = readline.createInterface({
+          input: process.stdout,
+          crlfDelay: Infinity,
+        });
+
+        rl.on("line", (line) => {
+          const trimmedLine = line.trim();
+          if (!trimmedLine) return;
+
+          currentJsonString += trimmedLine;
+
+          if (trimmedLine.endsWith("},") || trimmedLine.endsWith("}")) {
+            try {
+              const item: { key: keyof T; value: T[keyof T] } = JSON.parse(
+                currentJsonString.replace(/,$/, "")
+              );
+              if (item.key && item.value !== undefined) {
+                currentMessage[item.key] = item.value;
+              }
+              currentJsonString = "";
+            } catch {
+              if (Object.keys(currentMessage).length > 0) {
+                messages.push({ ...currentMessage } as T);
+                currentMessage = {};
+              }
             }
           }
-        }
-      });
+        });
 
-      process.stderr.on("data", (data) => {
-        errorOutput += data.toString();
-      });
+        process.stderr.on("data", (data) => {
+          errorOutput += data.toString();
+        });
 
-      process.on("close", (code) => {
-        if (code !== 0) {
-          reject(new Error(`grib_dump failed: ${errorOutput}`));
-          return;
-        }
-        if (Object.keys(currentMessage).length > 0) {
-          messages.push({ ...currentMessage } as T);
-        }
+        process.on("close", (code) => {
+          if (code !== 0) {
+            reject(new Error(`grib_dump failed: ${errorOutput}`));
+            return;
+          }
+          if (Object.keys(currentMessage).length > 0) {
+            messages.push({ ...currentMessage } as T);
+          }
 
-        resolve(messages);
-      });
+          resolve(messages);
+        });
 
-      process.on("error", (error) => {
-        reject(new Error(`Failed to spawn grib_dump: ${error.message}`));
+        process.on("error", (error) => {
+          reject(new Error(`Failed to spawn grib_dump: ${error.message}`));
+        });
       });
-    });
+    } finally {
+      if (this.tempFilePath) {
+        await this.cleanup();
+      }
+    }
   }
 
   private async execFullGribDump<T extends BaseGrib2Message>(): Promise<T[]> {
@@ -223,7 +283,7 @@ export class EccodesWrapper {
     return params.join(",");
   }
 
-  mapValuesToLatLon(values: number[]): LocationForecast[] {
+  private mapValuesToLatLon(values: number[]): LocationForecast[] {
     const spotForecast: LocationForecast[] = new Array(values.length);
     let index = 0;
 
@@ -243,7 +303,7 @@ export class EccodesWrapper {
     return spotForecast;
   }
 
-  addLatLonToGribValues<T extends BaseGrib2Message>(res: T[]) {
+  private addLatLonToGribValues<T extends BaseGrib2Message>(res: T[]) {
     return res.map((val) => ({
       ...val,
       values: Array.isArray(val.values)
@@ -350,5 +410,9 @@ export class EccodesWrapper {
   async readToJson(options?: GribParsingOptions): Promise<BaseGrib2Message[]> {
     const res = await this.execFullGribDump();
     return options?.addLatLon ? this.addLatLonToGribValues(res) : res;
+  }
+
+  public async dispose(): Promise<void> {
+    await this.cleanup();
   }
 }
