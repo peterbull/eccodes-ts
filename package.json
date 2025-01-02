@@ -51,13 +51,13 @@
     "grib2",
     "gfs",
     "weather",
-    "meteorology"
+    "meteorology",
+    "surfing"
   ],
   "author": "Your Name",
   "license": "MIT",
   "dependencies": {
     "bindings": "^1.5.0",
-    "jsdom": "^25.0.1",
     "node-addon-api": "^8.3.0"
   },
   "devDependencies": {

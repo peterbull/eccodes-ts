@@ -11,7 +11,16 @@ export default defineConfig({
       formats: ["es", "cjs"],
     },
     rollupOptions: {
-      external: ["child_process", "util", "readline"],
+      external: [
+        "child_process",
+        "util",
+        "readline",
+        "stream",
+        "fs",
+        "os",
+        "path",
+        "stream/web",
+      ],
     },
   },
   plugins: [
