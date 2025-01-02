@@ -1,6 +1,6 @@
 {
   "name": "eccodes-ts",
-  "version": "0.0.17",
+  "version": "0.0.18",
   "description": "TypeScript wrapper for eccodes GRIB file handling",
   "type": "module",
   "repository": {
@@ -57,6 +57,7 @@
   "license": "MIT",
   "dependencies": {
     "bindings": "^1.5.0",
+    "jsdom": "^25.0.1",
     "node-addon-api": "^8.3.0"
   },
   "devDependencies": {
