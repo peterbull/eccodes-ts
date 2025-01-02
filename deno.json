@@ -32,7 +32,11 @@
     "child_process": "node:child_process",
     "util": "node:util",
     "readline": "node:readline",
-
+    "fs": "node:fs",
+    "os": "node:os",
+    "path": "node:path",
+    "stream": "node:stream",
+    "stream/web": "node:stream/web",
     "vitest": "npm:vitest"
   }
 }
