@@ -296,7 +296,7 @@ export class EccodesWrapper {
           lat,
           lon,
           value: values[index],
-        };
+        } as LocationForecast;
         index++;
       }
     }
