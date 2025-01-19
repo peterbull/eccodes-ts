@@ -1,6 +1,6 @@
 {
   "name": "eccodes-ts",
-  "version": "0.0.20",
+  "version": "0.0.21",
   "description": "TypeScript wrapper for eccodes GRIB file handling",
   "type": "module",
   "repository": {
