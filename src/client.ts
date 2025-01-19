@@ -330,9 +330,15 @@ export class EccodesWrapper {
     });
   }
 
-  async getSignificantWaveHeight(
-    options?: GribParsingOptions
-  ): Promise<GribResponse<WaveParameter, GribParsingOptions>> {
+  async getSignificantWaveHeight(options: {
+    addLatLon: true;
+  }): Promise<WithLatLon<WaveParameter>[]>;
+  async getSignificantWaveHeight(options?: {
+    addLatLon?: false;
+  }): Promise<WaveParameter[]>;
+  async getSignificantWaveHeight(options?: {
+    addLatLon?: boolean;
+  }): Promise<WaveParameter[] | WithLatLon<WaveParameter>[]> {
     const res = await this.execGribCommandStream<WaveParameter>(
       this.getCommandStreamParams({
         category: OceanographicParameterCategory.Waves,
@@ -342,9 +348,15 @@ export class EccodesWrapper {
     return options?.addLatLon ? this.addLatLonToGribValues(res) : res;
   }
 
-  async getPrimaryWavePeriod(
-    options?: GribParsingOptions
-  ): Promise<GribResponse<WaveParameter, GribParsingOptions>> {
+  async getPrimaryWavePeriod(options: {
+    addLatLon: true;
+  }): Promise<WithLatLon<WaveParameter>[]>;
+  async getPrimaryWavePeriod(options?: {
+    addLatLon?: false;
+  }): Promise<WaveParameter[]>;
+  async getPrimaryWavePeriod(options?: {
+    addLatLon?: boolean;
+  }): Promise<WaveParameter[] | WithLatLon<WaveParameter>[]> {
     const res = await this.execGribCommandStream<WaveParameter>(
       this.getCommandStreamParams({
         category: OceanographicParameterCategory.Waves,
@@ -354,9 +366,15 @@ export class EccodesWrapper {
     return options?.addLatLon ? this.addLatLonToGribValues(res) : res;
   }
 
-  async getPrimaryWaveDirection(
-    options?: GribParsingOptions
-  ): Promise<GribResponse<WaveParameter, GribParsingOptions>> {
+  async getPrimaryWaveDirection(options: {
+    addLatLon: true;
+  }): Promise<WithLatLon<WaveParameter>[]>;
+  async getPrimaryWaveDirection(options?: {
+    addLatLon?: false;
+  }): Promise<WaveParameter[]>;
+  async getPrimaryWaveDirection(options?: {
+    addLatLon?: boolean;
+  }): Promise<WaveParameter[] | WithLatLon<WaveParameter>[]> {
     const res = await this.execGribCommandStream<WaveParameter>(
       this.getCommandStreamParams({
         category: OceanographicParameterCategory.Waves,
@@ -366,9 +384,13 @@ export class EccodesWrapper {
     return options?.addLatLon ? this.addLatLonToGribValues(res) : res;
   }
 
-  async getWindSpeed(
-    options?: GribParsingOptions
-  ): Promise<GribResponse<WindParameter, GribParsingOptions>> {
+  async getWindSpeed(options: {
+    addLatLon: true;
+  }): Promise<WithLatLon<WindParameter>[]>;
+  async getWindSpeed(options?: { addLatLon?: false }): Promise<WindParameter[]>;
+  async getWindSpeed(options?: {
+    addLatLon?: boolean;
+  }): Promise<WindParameter[] | WithLatLon<WindParameter>[]> {
     const res = await this.execGribCommandStream<WindParameter>(
       this.getCommandStreamParams({
         category: MeteorologicalParameterCategory.Momentum,
@@ -377,10 +399,15 @@ export class EccodesWrapper {
     );
     return options?.addLatLon ? this.addLatLonToGribValues(res) : res;
   }
-
-  async getWindDirection(
-    options?: GribParsingOptions
-  ): Promise<GribResponse<WindParameter, GribParsingOptions>> {
+  async getWindDirection(options: {
+    addLatLon: true;
+  }): Promise<WithLatLon<WindParameter>[]>;
+  async getWindDirection(options?: {
+    addLatLon?: false;
+  }): Promise<WindParameter[]>;
+  async getWindDirection(options?: {
+    addLatLon?: boolean;
+  }): Promise<WindParameter[] | WithLatLon<WindParameter>[]> {
     const res = await this.execGribCommandStream<WindParameter>(
       this.getCommandStreamParams({
         category: MeteorologicalParameterCategory.Momentum,
@@ -390,6 +417,12 @@ export class EccodesWrapper {
     return options?.addLatLon ? this.addLatLonToGribValues(res) : res;
   }
 
+  async getWaveParameters(options: {
+    addLatLon: true;
+  }): Promise<WithLatLon<WaveParameter>[]>;
+  async getWaveParameters(options?: {
+    addLatLon?: false;
+  }): Promise<WaveParameter[]>;
   async getWaveParameters(
     options?: GribParsingOptions
   ): Promise<GribResponse<WaveParameter, GribParsingOptions>> {
@@ -401,6 +434,12 @@ export class EccodesWrapper {
     return options?.addLatLon ? this.addLatLonToGribValues(res) : res;
   }
 
+  async getWindParameters(options: {
+    addLatLon: true;
+  }): Promise<WithLatLon<WindParameter>[]>;
+  async getWindParameters(options?: {
+    addLatLon?: false;
+  }): Promise<WindParameter[]>;
   async getWindParameters(
     options?: GribParsingOptions
   ): Promise<GribResponse<WindParameter, GribParsingOptions>> {
@@ -412,6 +451,12 @@ export class EccodesWrapper {
     return options?.addLatLon ? this.addLatLonToGribValues(res) : res;
   }
 
+  async getParametersByType<T extends GribParameter>(
+    options: GribParametersByType & { addLatLon: true }
+  ): Promise<WithLatLon<T>[]>;
+  async getParametersByType<T extends GribParameter>(
+    options: Omit<GribParametersByType, "addLatLon"> & { addLatLon?: false }
+  ): Promise<T[]>;
   async getParametersByType<T extends GribParameter>(
     options: GribParametersByType
   ): Promise<GribResponse<T, GribParametersByType>> {
