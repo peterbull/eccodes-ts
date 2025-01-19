@@ -68,6 +68,15 @@ type GribParametersByType = CommandStreamParams & {
   addLatLon?: boolean;
 };
 
+type WithLatLon<T extends BaseGrib2Message> = {
+  [K in keyof T]: K extends "values" ? LocationForecast[] : T[K];
+};
+
+type GribResponse<
+  T extends BaseGrib2Message,
+  O = { addLatLon?: boolean },
+> = O extends { addLatLon: true } ? WithLatLon<T>[] : T[];
+
 export class EccodesWrapper {
   private tempFilePath: string | null = null;
   private readonly gribFilePath: string;
@@ -303,18 +312,23 @@ export class EccodesWrapper {
     return spotForecast;
   }
 
-  private addLatLonToGribValues<T extends BaseGrib2Message>(res: T[]) {
-    return res.map((val) => ({
-      ...val,
-      values: Array.isArray(val.values)
-        ? this.mapValuesToLatLon(val.values as number[])
-        : [],
-    }));
+  private addLatLonToGribValues<T extends BaseGrib2Message>(
+    res: T[]
+  ): WithLatLon<T>[] {
+    return res.map((val) => {
+      const transformed: WithLatLon<T> = {
+        ...val,
+        values: Array.isArray(val.values)
+          ? this.mapValuesToLatLon(val.values as number[])
+          : [],
+      } as WithLatLon<T>;
+      return transformed;
+    });
   }
 
   async getSignificantWaveHeight(
     options?: GribParsingOptions
-  ): Promise<WaveParameter[]> {
+  ): Promise<GribResponse<WaveParameter, GribParsingOptions>> {
     const res = await this.execGribCommandStream<WaveParameter>(
       this.getCommandStreamParams({
         category: OceanographicParameterCategory.Waves,
@@ -326,7 +340,7 @@ export class EccodesWrapper {
 
   async getPrimaryWavePeriod(
     options?: GribParsingOptions
-  ): Promise<WaveParameter[]> {
+  ): Promise<GribResponse<WaveParameter, GribParsingOptions>> {
     const res = await this.execGribCommandStream<WaveParameter>(
       this.getCommandStreamParams({
         category: OceanographicParameterCategory.Waves,
@@ -338,7 +352,7 @@ export class EccodesWrapper {
 
   async getPrimaryWaveDirection(
     options?: GribParsingOptions
-  ): Promise<WaveParameter[]> {
+  ): Promise<GribResponse<WaveParameter, GribParsingOptions>> {
     const res = await this.execGribCommandStream<WaveParameter>(
       this.getCommandStreamParams({
         category: OceanographicParameterCategory.Waves,
@@ -348,7 +362,9 @@ export class EccodesWrapper {
     return options?.addLatLon ? this.addLatLonToGribValues(res) : res;
   }
 
-  async getWindSpeed(options?: GribParsingOptions): Promise<WindParameter[]> {
+  async getWindSpeed(
+    options?: GribParsingOptions
+  ): Promise<GribResponse<WindParameter, GribParsingOptions>> {
     const res = await this.execGribCommandStream<WindParameter>(
       this.getCommandStreamParams({
         category: MeteorologicalParameterCategory.Momentum,
@@ -360,7 +376,7 @@ export class EccodesWrapper {
 
   async getWindDirection(
     options?: GribParsingOptions
-  ): Promise<WindParameter[]> {
+  ): Promise<GribResponse<WindParameter, GribParsingOptions>> {
     const res = await this.execGribCommandStream<WindParameter>(
       this.getCommandStreamParams({
         category: MeteorologicalParameterCategory.Momentum,
@@ -372,7 +388,7 @@ export class EccodesWrapper {
 
   async getWaveParameters(
     options?: GribParsingOptions
-  ): Promise<WaveParameter[]> {
+  ): Promise<GribResponse<WaveParameter, GribParsingOptions>> {
     const res = await this.execGribCommandStream<WaveParameter>(
       this.getCommandStreamParams({
         category: OceanographicParameterCategory.Waves,
@@ -383,7 +399,7 @@ export class EccodesWrapper {
 
   async getWindParameters(
     options?: GribParsingOptions
-  ): Promise<WindParameter[]> {
+  ): Promise<GribResponse<WindParameter, GribParsingOptions>> {
     const res = await this.execGribCommandStream<WindParameter>(
       this.getCommandStreamParams({
         category: MeteorologicalParameterCategory.Momentum,
@@ -394,13 +410,15 @@ export class EccodesWrapper {
 
   async getParametersByType<T extends GribParameter>(
     options: GribParametersByType
-  ): Promise<T[]> {
+  ): Promise<GribResponse<T, GribParametersByType>> {
     const specificKeys = options.keys ? options.keys.join(",") : ESSENTIAL_KEYS;
     const res = await this.execGribCommandStream<T>(
       this.getCommandStreamParams(options),
       specificKeys
     );
-    return options.addLatLon ? this.addLatLonToGribValues(res) : res;
+    return (
+      options.addLatLon ? this.addLatLonToGribValues(res) : res
+    ) as GribResponse<T, GribParametersByType>;
   }
 
   async getMetadata(): Promise<BaseGrib2Message[]> {
