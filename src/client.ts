@@ -75,7 +75,11 @@ type WithLatLon<T extends BaseGrib2Message> = {
 type GribResponse<
   T extends BaseGrib2Message,
   O = { addLatLon?: boolean },
-> = O extends { addLatLon: true } ? WithLatLon<T>[] : T[];
+> = O extends { addLatLon: true }
+  ? Array<{
+      [K in keyof T]: K extends "values" ? LocationForecast[] : T[K];
+    }>
+  : T[];
 
 export class EccodesWrapper {
   private tempFilePath: string | null = null;
