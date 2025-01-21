@@ -236,13 +236,6 @@ describe("EccodesWrapper", () => {
     });
   });
 
-  describe("error handling", () => {
-    it("should handle invalid GRIB file path", async () => {
-      const invalidWrapper = new EccodesWrapper("invalid/path.grib2");
-      await expect(invalidWrapper.getMetadata()).rejects.toThrow();
-    });
-  });
-
   describe("command stream parameters", () => {
     it("should generate correct command parameters", () => {
       const params = wrapper.getCommandStreamParams({

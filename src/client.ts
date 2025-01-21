@@ -1,10 +1,8 @@
 import { spawn } from "child_process";
 import * as readline from "readline";
-import { Readable } from "stream";
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
-import { ReadableStream } from "stream/web";
 import {
   BaseGrib2Message,
   WaveParameter,
@@ -81,72 +79,168 @@ type GribResponse<
     }>
   : T[];
 
+type InputSource = string;
+
+interface FetchOptions {
+  timeout?: number;
+  retries?: number;
+}
+
 export class EccodesWrapper {
   private tempFilePath: string | null = null;
   private readonly gribFilePath: string;
+  private initPromise: Promise<void> | null = null;
+  private static readonly DEFAULT_TIMEOUT = 30000; // 30 seconds
+  private static readonly DEFAULT_RETRIES = 3;
 
-  constructor(input: string | Readable | ReadableStream<Uint8Array> | null) {
-    if (input === null) {
-      throw new Error("Input stream cannot be null");
+  constructor(input: InputSource) {
+    if (!input?.trim()) {
+      throw new Error("Input source cannot be empty");
     }
 
-    if (typeof input === "string") {
-      this.gribFilePath = input;
-    } else if (input instanceof Readable) {
+    if (this.isValidUrl(input)) {
       this.gribFilePath = this.createTempFile();
-      this.handleInputStream(input);
-    } else if (input instanceof ReadableStream) {
-      this.gribFilePath = this.createTempFile();
-      const nodeStream = Readable.fromWeb(input);
-      this.handleInputStream(nodeStream);
+      this.initPromise = this.fetchAndSaveFile(input);
     } else {
-      throw new Error("Invalid input type");
+      const resolvedPath = this.resolveFilePath(input);
+      if (!fs.existsSync(resolvedPath)) {
+        throw new Error(`File not found: ${resolvedPath}`);
+      }
+      this.gribFilePath = resolvedPath;
     }
   }
 
-  private createTempFile(): string {
-    const tempPath = path.join(os.tmpdir(), `grib-${Date.now()}.grib2`);
-    this.tempFilePath = tempPath;
-    return tempPath;
+  private resolveFilePath(filePath: string): string {
+    if (path.isAbsolute(filePath)) {
+      return filePath;
+    }
+
+    const absolutePath = path.resolve(process.cwd(), filePath);
+
+    try {
+      const stats = fs.statSync(absolutePath);
+      if (!stats.isFile()) {
+        throw new Error(`Path exists but is not a file: ${absolutePath}`);
+      }
+      return absolutePath;
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+        // Try resolving relative to project root if exists
+        const projectRoot = this.findProjectRoot(process.cwd());
+        if (projectRoot) {
+          const projectPath = path.resolve(projectRoot, filePath);
+          if (fs.existsSync(projectPath)) {
+            return projectPath;
+          }
+        }
+      }
+      throw error;
+    }
   }
 
-  private async handleInputStream(stream: Readable): Promise<void> {
-    return new Promise((resolve, reject) => {
-      const writeStream = fs.createWriteStream(this.gribFilePath);
-
-      stream.pipe(writeStream);
-
-      writeStream.on("finish", resolve);
-      writeStream.on("error", (err) => {
-        this.cleanup().finally(() => reject(err));
-      });
-      stream.on("error", (err) => {
-        this.cleanup().finally(() => reject(err));
-      });
-    });
+  private findProjectRoot(startPath: string): string | null {
+    let currentPath = startPath;
+    while (currentPath !== path.parse(currentPath).root) {
+      if (fs.existsSync(path.join(currentPath, "package.json"))) {
+        return currentPath;
+      }
+      currentPath = path.dirname(currentPath);
+    }
+    return null;
   }
 
-  public async cleanup(): Promise<void> {
-    if (this.tempFilePath) {
+  private isValidUrl(input: string): boolean {
+    try {
+      const url = new URL(input);
+      return url.protocol === "http:" || url.protocol === "https:";
+    } catch {
+      return false;
+    }
+  }
+
+  public async fetchAndSaveFile(
+    url: string,
+    options: FetchOptions = {}
+  ): Promise<void> {
+    const {
+      timeout = EccodesWrapper.DEFAULT_TIMEOUT,
+      retries = EccodesWrapper.DEFAULT_RETRIES,
+    } = options;
+
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= retries; attempt++) {
       try {
-        await fs.promises.unlink(this.tempFilePath);
-        this.tempFilePath = null;
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), timeout);
+
+        const response = await fetch(url, {
+          signal: controller.signal,
+        });
+
+        clearTimeout(timeoutId);
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        const arrayBuffer = await response.arrayBuffer();
+        await fs.promises.writeFile(
+          this.gribFilePath,
+          Buffer.from(arrayBuffer)
+        );
+
+        // Ensure file is fully written
+        const fd = await fs.promises.open(this.gribFilePath, "r");
+        await fd.sync();
+        await fd.close();
+
+        return;
       } catch (error) {
-        console.error("Error cleaning up temporary file:", error);
+        lastError = error as Error;
+        if (attempt === retries) {
+          await this.cleanup();
+          throw new Error(
+            `Failed to fetch GRIB file after ${retries} attempts: ${lastError.message}`
+          );
+        }
+        // Wait before retry with exponential backoff
+        await new Promise((resolve) =>
+          setTimeout(resolve, Math.pow(2, attempt) * 1000)
+        );
       }
     }
   }
 
-  /**
-   * Executes grib_dump command to extract data from GRIB files
-   * @param whereClause - Optional filter condition for GRIB messages
-   * @param specificKeys - Keys to extract from GRIB messages
-   * @returns Promise with array of parsed GRIB messages
-   */
+  private createTempFile(): string {
+    const tempPath = path.join(
+      os.tmpdir(),
+      `grib-${Date.now()}-${Math.random().toString(36).slice(2)}.grib2`
+    );
+    this.tempFilePath = tempPath;
+    return tempPath;
+  }
+
   private async execGribCommandStream<T extends BaseGrib2Message>(
     whereClause?: string,
     specificKeys: string = ESSENTIAL_KEYS
   ): Promise<T[]> {
+    if (this.initPromise) {
+      await this.initPromise;
+    }
+
+    // Verify file exists and is readable
+    try {
+      await fs.promises.access(this.gribFilePath, fs.constants.R_OK);
+    } catch (error) {
+      if (error instanceof Error) {
+        throw new Error(`GRIB file not accessible: ${error.message}`);
+      } else {
+        throw new Error("GRIB file not accessible");
+      }
+    }
+
+    // Continue with command execution
     try {
       return await new Promise((resolve, reject) => {
         const messages: T[] = [];
@@ -481,5 +575,16 @@ export class EccodesWrapper {
 
   public async dispose(): Promise<void> {
     await this.cleanup();
+  }
+
+  public async cleanup(): Promise<void> {
+    if (this.tempFilePath) {
+      try {
+        await fs.promises.unlink(this.tempFilePath);
+        this.tempFilePath = null;
+      } catch (error) {
+        console.error("Error cleaning up temporary file:", error);
+      }
+    }
   }
 }
