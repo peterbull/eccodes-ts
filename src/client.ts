@@ -5,12 +5,16 @@ import * as os from "os";
 import * as path from "path";
 import {
   BaseGrib2Message,
+  CommandStreamParams,
+  GribParameter,
+  GribParametersByType,
+  GribParsingOptions,
+  GribResponse,
+  InputSource,
   WaveParameter,
   WindParameter,
-  GribParameter,
-  Discipline,
+  WithLatLon,
 } from "@/types/types";
-import { ParameterCategory, ParameterNumber } from "@/types/types";
 import { OceanographicParameterCategory } from "@/types/discipline/oceanographicProducts/categories";
 import { OceanographicWaveParameterNumber } from "@/types/discipline/oceanographicProducts/waves";
 import { MeteorologicalMomentumParameterNumber } from "@/types/discipline/meteorologicalProducts/momentum";
@@ -50,36 +54,6 @@ const METADATA_KEYS = [
   "numberOfMissing",
   "getNumberOfValues",
 ].join(",");
-
-type CommandStreamParams = {
-  discipline?: Discipline;
-  category: ParameterCategory;
-  number?: ParameterNumber;
-};
-
-type GribParsingOptions = {
-  addLatLon?: boolean;
-};
-
-type GribParametersByType = CommandStreamParams & {
-  keys?: string[];
-  addLatLon?: boolean;
-};
-
-type WithLatLon<T extends BaseGrib2Message> = {
-  [K in keyof T]: K extends "values" ? LocationForecast[] : T[K];
-};
-
-type GribResponse<
-  T extends BaseGrib2Message,
-  O = { addLatLon?: boolean },
-> = O extends { addLatLon: true }
-  ? Array<{
-      [K in keyof T]: K extends "values" ? LocationForecast[] : T[K];
-    }>
-  : T[];
-
-type InputSource = string;
 
 interface FetchOptions {
   timeout?: number;

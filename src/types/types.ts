@@ -185,3 +185,27 @@ export interface ForecastMessage {
   average: number;
   standardDeviation: number;
 }
+export type CommandStreamParams = {
+  discipline?: Discipline;
+  category: ParameterCategory;
+  number?: ParameterNumber;
+};
+export type GribParsingOptions = {
+  addLatLon?: boolean;
+};
+export type GribParametersByType = CommandStreamParams & {
+  keys?: string[];
+  addLatLon?: boolean;
+};
+export type WithLatLon<T extends BaseGrib2Message> = {
+  [K in keyof T]: K extends "values" ? LocationForecast[] : T[K];
+};
+export type GribResponse<
+  T extends BaseGrib2Message,
+  O = { addLatLon?: boolean },
+> = O extends { addLatLon: true }
+  ? Array<{
+      [K in keyof T]: K extends "values" ? LocationForecast[] : T[K];
+    }>
+  : T[];
+export type InputSource = string;
