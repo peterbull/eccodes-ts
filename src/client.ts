@@ -235,7 +235,7 @@ export class EccodesWrapper {
               new Error(
                 "grib_dump command not found. Please ensure eccodes is installed:\n" +
                   "- On MacOS: brew install eccodes\n" +
-                  "- On Ubuntu: apt-get install libeccodes-dev\n" +
+                  "- On Ubuntu: apt-get install libeccodes-dev libeccodes-tools" +
                   "- On Windows: Install WSL and use Ubuntu package\n\n" +
                   "If already installed, check if grib_dump is in your PATH"
               )
