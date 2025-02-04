@@ -442,7 +442,7 @@ export class EccodesWrapper {
   }): Promise<WaveParameter[]>;
   async getSignificantWindWaveHeight(options?: {
     addLatLon?: boolean;
-  }): Promise<WithLatLon<WaveParameter>[]> {
+  }): Promise<WaveParameter[] | WithLatLon<WaveParameter>[]> {
     const res = await this.execGribCommandStream<WaveParameter>(
       this.getCommandStreamParams({
         category: OceanographicParameterCategory.Waves,
