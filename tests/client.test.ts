@@ -61,6 +61,19 @@ describe("EccodesWrapper", () => {
         );
       }
     });
+
+    it("should get wind wave height", async () => {
+      const data = await wrapper.getSignificantWindWaveHeight();
+      expect(Array.isArray(data)).toBe(true);
+      if (data.length > 0) {
+        expect(data[0].parameterCategory).toBe(
+          OceanographicParameterCategory.Waves
+        );
+        expect(data[0].parameterNumber).toBe(
+          OceanographicWaveParameterNumber.WindWaveHeight
+        );
+      }
+    });
   });
 
   describe("wind parameter methods", () => {
